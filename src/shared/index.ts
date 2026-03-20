@@ -1,5 +1,5 @@
 import Ele from '@/core/ele'
-import { rootThemePrefix, type Theme } from '@/config/page-themes'
+import { rootThemePrefix, isDarkTheme, type Theme } from '@/config/page-themes'
 
 export const HTML = document.documentElement
 export const HEAD = document.head
@@ -17,6 +17,9 @@ export const getMediaQueryTheme = (): Exclude<Theme, 'auto'> =>
 
 export const toTheme = (theme: Theme): Exclude<Theme, 'auto'> =>
   theme === 'auto' ? getMediaQueryTheme() : theme
+
+export const toColorScheme = (theme: Exclude<Theme, 'auto'>): 'light' | 'dark' =>
+  isDarkTheme(theme) ? 'dark' : 'light'
 
 export function getAssetsURL(path: string): string {
   return chrome.runtime.getURL(path)

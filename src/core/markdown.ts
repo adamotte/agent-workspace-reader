@@ -16,6 +16,7 @@ import mAlert from '@/plugins/alert'
 import mGraphvizBlock from '@/plugins/graphviz-block'
 import mMultimdTable from 'markdown-it-multimd-table'
 import MD_PLUGINS from '@/config/md-plugins'
+import { isDarkTheme } from '@/config/page-themes'
 import successIcon from '@/images/icon_success.svg'
 import copyIcon from '@/images/icon_copy.svg'
 import className from '@/config/class-name'
@@ -32,7 +33,7 @@ const PLUGINS: Plugins = {
   Katex: [mKatex],
   Mermaid: ({ theme }) => [
     mMermaid,
-    { theme: theme === 'dark' ? 'dark' : 'default', themeVariables: undefined },
+    { theme: isDarkTheme(theme) ? 'dark' : 'default', themeVariables: undefined },
   ],
   Mark: [mMark],
   Deflist: [mDeflist],
