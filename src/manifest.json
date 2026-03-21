@@ -16,7 +16,12 @@
   "web_accessible_resources": [
     {
       "resources": ["css/*", "fonts/*", "images/*"],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "*://*/*.md", "*://*/*.mdx", "*://*/*.mkd", "*://*/*.markdown",
+        "*://*/*.MD", "*://*/*.MDX", "*://*/*.MKD", "*://*/*.MARKDOWN",
+        "file://*/*.md", "file://*/*.mdx", "file://*/*.mkd", "file://*/*.markdown",
+        "file://*/*.MD", "file://*/*.MDX", "file://*/*.MKD", "file://*/*.MARKDOWN"
+      ]
     }
   ],
   "background": {

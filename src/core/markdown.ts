@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
 import MarkdownIt from 'markdown-it'
 import mSub from 'markdown-it-sub'
@@ -114,6 +115,27 @@ function removeFrontmatter(content: string): string {
   return content.replace(frontmatterRegex, '')
 }
 
+// Allow tags/attributes used by markdown-it plugins (KaTeX, Mermaid, alerts, etc.)
+const PURIFY_CONFIG: DOMPurify.Config = {
+  ADD_TAGS: ['semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'ms', 'mtext',
+    'mfrac', 'msqrt', 'mroot', 'msub', 'msup', 'msubsup', 'munder', 'mover',
+    'munderover', 'mtable', 'mtr', 'mtd', 'mspace', 'mpadded', 'menclose',
+    'mglyph', 'math', 'svg', 'g', 'path', 'rect', 'circle', 'line', 'polyline',
+    'polygon', 'text', 'tspan', 'defs', 'marker', 'foreignObject', 'use',
+    'clipPath', 'linearGradient', 'radialGradient', 'stop', 'pattern', 'mask',
+    'image', 'switch', 'desc', 'title', 'symbol'],
+  ADD_ATTR: ['mathvariant', 'encoding', 'xmlns', 'overflow', 'lspace', 'rspace',
+    'stretchy', 'fence', 'separator', 'accent', 'accentunder', 'columnalign',
+    'rowalign', 'columnspacing', 'rowspacing', 'columnlines', 'rowlines', 'frame',
+    'framespacing', 'displaystyle', 'scriptlevel', 'linethickness', 'notation',
+    'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-dasharray',
+    'stroke-linecap', 'stroke-linejoin', 'transform', 'd', 'cx', 'cy', 'r', 'rx',
+    'ry', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'points', 'marker-end',
+    'marker-start', 'marker-mid', 'text-anchor', 'dominant-baseline', 'font-size',
+    'font-family', 'font-weight', 'clip-path', 'opacity', 'lang'],
+  ALLOW_DATA_ATTR: true,
+}
+
 interface MdRender {
   (code: string, options: MdOptions): string
   md?: MarkdownIt
@@ -124,7 +146,8 @@ export const mdRender: MdRender = (code, options): string => {
   }
   // filter frontmatter
   const filteredCode = removeFrontmatter(code)
-  return mdRender.md.render(filteredCode)
+  const rawHtml = mdRender.md.render(filteredCode)
+  return DOMPurify.sanitize(rawHtml, PURIFY_CONFIG)
 }
 
 export default initRender

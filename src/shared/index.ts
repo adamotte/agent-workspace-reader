@@ -40,31 +40,8 @@ export function setTheme(themeType: Theme) {
   HTML.dataset[rootThemePrefix] = themeType
 }
 
-export function xhr(
-  url: string,
-  method: string = 'GET',
-  body?: Document | XMLHttpRequestBodyInit,
-): Promise<EventTarget> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.onreadystatechange = ({ target }) => {
-      const { readyState, status } = xhr
-      if (readyState === xhr.DONE) {
-        if (status === 0 || (status >= 200 && status < 400)) {
-          resolve(target)
-        } else {
-          reject(new Error('Request failed'))
-        }
-      }
-    }
-    xhr.onerror = reject
-    xhr.open(method, url)
-    xhr.send(body)
-  })
-}
-
 export function writeText(text: string): Promise<void> {
-  if ('clipboard2' in navigator) {
+  if ('clipboard' in navigator) {
     return navigator.clipboard.writeText(text)
   }
 
