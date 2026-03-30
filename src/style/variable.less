@@ -103,8 +103,8 @@
 
 .tokyo-midnight() {
   --color-white: #c0caf5;
-  --color-primary: #7aa2f7;
-  --color-primary--hover: #89b4fa;
+  --color-primary: #7dcfff;
+  --color-primary--hover: #89ddff;
   --color-primary-alpha-10: rgba(122, 162, 247, 0.1);
   --color-important: #bb9af7;
   --color-important-alpha-10: rgba(187, 154, 247, 0.1);
@@ -115,8 +115,8 @@
   --color-danger: #f7768e;
   --color-danger-alpha-10: rgba(247, 118, 142, 0.1);
   --color-mark: #e0af68;
-  --color-text-primary: #a9b1d6;
-  --color-text-secondary: #9aa5ce;
+  --color-text-primary: #c0caf5;
+  --color-text-secondary: #a9b1d6;
   --color-text-gray: #565f89;
   --color-border: #292e42;
   --color-bg: #1a1b26;
@@ -125,9 +125,9 @@
   --color-side-border: #1a1b26;
   --color-side-shadow: 0 0 5px rgba(0, 0, 0, 0.15), 0 0 20px rgba(0, 0, 0, 0.5);
   --color-img-bg: #414868;
-  --color-block-bg: #1f2335;
-  --color-code-bg: #1f2335;
-  --color-thead-bg: #1f2335;
+  --color-block-bg: #24283b;
+  --color-code-bg: #24283b;
+  --color-thead-bg: #24283b;
   --color-disabled: #565f89;
   --color-button: fade(#a9b1d6, 40%);
   --color-button-bg: none;
@@ -148,7 +148,7 @@
   --color-modal-bg: rgba(0, 0, 0, 0.5);
   --opacity-img: 0.85;
   // Tokyo Night hljs colors
-  --hljs-base: #1f2335;
+  --hljs-base: #24283b;
   --hljs-mono-1: #a9b1d6;
   --hljs-mono-2: #9aa5ce;
   --hljs-mono-3: #565f89;
@@ -187,9 +187,9 @@
   --color-side-border: #2d2a2e;
   --color-side-shadow: 0 0 5px rgba(0, 0, 0, 0.15), 0 0 20px rgba(0, 0, 0, 0.5);
   --color-img-bg: #525053;
-  --color-block-bg: #363336;
-  --color-code-bg: #363336;
-  --color-thead-bg: #363336;
+  --color-block-bg: #403e41;
+  --color-code-bg: #403e41;
+  --color-thead-bg: #403e41;
   --color-disabled: #727072;
   --color-button: fade(#fcfcfa, 40%);
   --color-button-bg: none;
@@ -210,7 +210,7 @@
   --color-modal-bg: rgba(0, 0, 0, 0.5);
   --opacity-img: 0.85;
   // Monokai Pro hljs colors
-  --hljs-base: #363336;
+  --hljs-base: #403e41;
   --hljs-mono-1: #fcfcfa;
   --hljs-mono-2: #c1c0c0;
   --hljs-mono-3: #727072;
@@ -250,6 +250,60 @@
     &[data-md-reader-theme='tokyo-midnight'],
     &[data-md-reader-theme='monokai-pro'] {
       color-scheme: dark;
+    }
+  }
+}
+
+// Tokyo Midnight — element-specific overrides matching marktext theme
+:root[data-md-reader-theme='tokyo-midnight'] {
+  .md-reader__markdown-content {
+    h1 { color: #bb9af7; } // purple
+    h2 { color: #7aa2f7; border-bottom-color: #292e42; } // blue
+    h3 { color: #7dcfff; } // cyan
+    h4 { color: #9ece6a; } // green
+    h5 { color: #e0af68; } // gold
+    h6 { color: #f7768e; } // pink
+
+    em { color: #bb9af7; } // purple italic
+
+    blockquote:not(.note, .info, .tip, .tips, .success, .warning, .danger) {
+      border-left-color: #414868;
+      color: rgba(192, 202, 245, 0.6);
+    }
+
+    hr {
+      border-top: 2px dashed #3b4261;
+    }
+
+    ol, ul {
+      &::marker, li::marker { color: #7aa2f7; }
+    }
+  }
+}
+
+// Monokai Pro — element-specific overrides matching marktext theme
+:root[data-md-reader-theme='monokai-pro'] {
+  .md-reader__markdown-content {
+    h1 { color: #ff6188; } // pink
+    h2 { color: #ffd866; border-bottom-color: #403e41; } // yellow
+    h3 { color: #a9dc76; } // green
+    h4 { color: #78dce8; } // cyan
+    h5 { color: #ab9df2; } // purple
+    h6 { color: #fc9867; } // orange
+
+    em { color: #ffd866; } // yellow italic
+
+    blockquote:not(.note, .info, .tip, .tips, .success, .warning, .danger) {
+      border-left-color: #727072;
+      color: rgba(252, 252, 250, 0.6);
+    }
+
+    hr {
+      border-top: 2px dashed #5b595c;
+    }
+
+    ol, ul {
+      &::marker, li::marker { color: #ff6188; }
     }
   }
 }
