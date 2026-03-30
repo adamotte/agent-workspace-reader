@@ -255,8 +255,10 @@
 }
 
 // Tokyo Midnight — element-specific overrides matching marktext theme
+// Selectors must include .md-reader__body to beat the specificity of
+// body.md-reader .md-reader__body .md-reader__markdown-content from theme.less
 :root[data-md-reader-theme='tokyo-midnight'] {
-  .md-reader__markdown-content {
+  .md-reader__body .md-reader__markdown-content {
     h1 { color: #bb9af7; } // purple
     h2 { color: #7aa2f7; border-bottom-color: #292e42; } // blue
     h3 { color: #7dcfff; } // cyan
@@ -264,10 +266,12 @@
     h5 { color: #e0af68; } // gold
     h6 { color: #f7768e; } // pink
 
+    a { color: #7dcfff; &:hover, &:active { color: #89ddff; } }
     em { color: #bb9af7; } // purple italic
+    strong { color: #c0caf5; } // bright lavender for bold
 
     blockquote:not(.note, .info, .tip, .tips, .success, .warning, .danger) {
-      border-left-color: #414868;
+      border-left: 4px solid #414868;
       color: rgba(192, 202, 245, 0.6);
     }
 
@@ -276,14 +280,14 @@
     }
 
     ol, ul {
-      &::marker, li::marker { color: #7aa2f7; }
+      li::marker { color: #7aa2f7; }
     }
   }
 }
 
 // Monokai Pro — element-specific overrides matching marktext theme
 :root[data-md-reader-theme='monokai-pro'] {
-  .md-reader__markdown-content {
+  .md-reader__body .md-reader__markdown-content {
     h1 { color: #ff6188; } // pink
     h2 { color: #ffd866; border-bottom-color: #403e41; } // yellow
     h3 { color: #a9dc76; } // green
@@ -291,10 +295,12 @@
     h5 { color: #ab9df2; } // purple
     h6 { color: #fc9867; } // orange
 
+    a { color: #78dce8; &:hover, &:active { color: #8de8f2; } }
     em { color: #ffd866; } // yellow italic
+    strong { color: #fcfcfa; } // bright white for bold
 
     blockquote:not(.note, .info, .tip, .tips, .success, .warning, .danger) {
-      border-left-color: #727072;
+      border-left: 4px solid #727072;
       color: rgba(252, 252, 250, 0.6);
     }
 
@@ -303,7 +309,7 @@
     }
 
     ol, ul {
-      &::marker, li::marker { color: #ff6188; }
+      li::marker { color: #ff6188; }
     }
   }
 }
