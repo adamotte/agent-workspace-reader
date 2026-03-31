@@ -365,6 +365,26 @@
   .highlight();
 }
 
+.synthwave-84() {
+  --color-white: #ffffff; --color-primary: #36f9f6; --color-primary--hover: #72f1b8;
+  --color-primary-alpha-10: rgba(255, 126, 219, 0.1);
+  --color-important: #b084eb; --color-important-alpha-10: rgba(176, 132, 235, 0.1);
+  --color-success: #72f1b8; --color-success-alpha-10: rgba(114, 241, 184, 0.1);
+  --color-warning: #fede5d; --color-warning-alpha-10: rgba(254, 222, 93, 0.1);
+  --color-danger: #fe4450; --color-danger-alpha-10: rgba(254, 68, 80, 0.1);
+  --color-mark: #fede5d; --color-text-primary: #ffffff; --color-text-secondary: #f8f8f2;
+  --color-text-gray: #848bbd; --color-border: #34294a; --color-bg: #262335;
+  --color-side: rgba(255, 255, 255, 0.6); --color-side-bg: #1e1a29;
+  --color-side-border: #181521; --color-side-shadow: 0 0 5px rgba(0,0,0,.15), 0 0 20px rgba(0,0,0,.5);
+  --color-img-bg: #34294a; --color-block-bg: #34294a; --color-code-bg: #34294a;
+  --color-thead-bg: #34294a; --color-disabled: #614d85;
+  .dark-chrome(#ffffff, #34294a, #ff7edb);
+  --hljs-base: #34294a; --hljs-mono-1: #f8f8f2; --hljs-mono-2: #36f9f6; --hljs-mono-3: #848bbd;
+  --hljs-hue-1: #36f9f6; --hljs-hue-2: #fede5d; --hljs-hue-3: #ff7edb; --hljs-hue-4: #72f1b8;
+  --hljs-hue-5: #ff7edb; --hljs-hue-5-2: #fe4450; --hljs-hue-6: #f97e72; --hljs-hue-6-2: #fede5d;
+  .highlight();
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // :root — apply theme variables via data attribute
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -385,6 +405,7 @@
   &[data-md-reader-theme='catppuccin-mocha'] .md-reader { .catppuccin-mocha(); }
   &[data-md-reader-theme='rose-pine'] .md-reader { .rose-pine(); }
   &[data-md-reader-theme='gruvbox-dark'] .md-reader { .gruvbox-dark(); }
+  &[data-md-reader-theme='synthwave-84'] .md-reader { .synthwave-84(); }
 
   &:not([data-md-reader-theme-scheme-disabled]) {
     &[data-md-reader-theme='light'],
@@ -400,7 +421,8 @@
     &[data-md-reader-theme='one-dark'],
     &[data-md-reader-theme='catppuccin-mocha'],
     &[data-md-reader-theme='rose-pine'],
-    &[data-md-reader-theme='gruvbox-dark'] {
+    &[data-md-reader-theme='gruvbox-dark'],
+    &[data-md-reader-theme='synthwave-84'] {
       color-scheme: dark;
     }
   }
@@ -460,6 +482,11 @@
   .theme-elements(#fb4934, #fabd2f, #b8bb26, #83a598, #d3869b, #8ec07c,
     #83a598, #8ec07c, #fabd2f, #ebdbb2,
     #665c54, rgba(235, 219, 178, 0.6), #504945, #fe8019);
+}
+:root[data-md-reader-theme='synthwave-84'] .md-reader__body .md-reader__markdown-content {
+  .theme-elements(#ff7edb, #36f9f6, #fede5d, #72f1b8, #f97e72, #b084eb,
+    #36f9f6, #72f1b8, #ff7edb, #ffffff,
+    #614d85, rgba(255, 255, 255, 0.6), #463860, #fede5d);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
