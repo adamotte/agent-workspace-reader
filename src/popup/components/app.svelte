@@ -138,7 +138,7 @@
   main {
     overflow: auto;
     box-sizing: border-box;
-    width: 330px;
+    width: 360px;
     max-height: 599px;
     padding: 22px 24px 10px;
     border: 1px solid #24315870;
