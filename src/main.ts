@@ -95,6 +95,8 @@ function main(data: Data) {
       target.innerHTML = mdRender(code, {
         theme: toTheme(configData.pageTheme),
         plugins: configData.mdPlugins,
+        mermaidLook: configData.mermaidLook,
+        mermaidLayout: configData.mermaidLayout,
         ...options,
       })
       const ele = target instanceof Ele ? target.ele : target

@@ -32,9 +32,13 @@ const PLUGINS: Plugins = {
   Ins: [mIns],
   Abbr: [mAbbr],
   Katex: [mKatex],
-  Mermaid: ({ theme }) => [
+  Mermaid: ({ theme, mermaidLook, mermaidLayout }) => [
     mMermaid,
-    { theme: isDarkTheme(theme) ? 'dark' : 'default' },
+    {
+      theme: isDarkTheme(theme) ? 'dark' : 'default',
+      look: mermaidLook,
+      layout: mermaidLayout,
+    },
   ],
   Mark: [mMark],
   Deflist: [mDeflist],

@@ -50,6 +50,8 @@ const actionMap = {
   centered: 'toggleCentered',
   mdPlugins: 'updateMdPlugins',
   pageTheme: 'updatePageTheme',
+  mermaidLook: 'updateMdPlugins',
+  mermaidLayout: 'updateMdPlugins',
   hiddenSide: 'toggleSide',
 }
 

@@ -9,6 +9,7 @@
   import Chip, { Set, Text } from '@smui/chips'
   import MD_PLUGINS from '@/config/md-plugins'
   import PAGE_THEMES from '@/config/page-themes'
+  import { MERMAID_LAYOUTS, MERMAID_LOOKS } from '@/config/mermaid-options'
   import { getDefaultData, type Data } from '@/core/data'
   import pkg from '../../../package.json'
   import i18n from '@/config/i18n'
@@ -116,6 +117,36 @@
             bind:group={data.pageTheme}
             bind:value={mode}
             on:change={() => updateConfig('pageTheme', mode)}
+          />
+        </FormField>
+      {/each}
+    </div>
+
+    <div class="form-item">
+      <div class="label-item">{localize('label_mermaid-look')}:</div>
+      {#each MERMAID_LOOKS as look}
+        <FormField>
+          <span slot="label"> {localize(`mermaid_look_${look}`)} </span>
+          <Radio
+            disabled={!data.enable || !data.mdPlugins.includes('Mermaid')}
+            bind:group={data.mermaidLook}
+            bind:value={look}
+            on:change={() => updateConfig('mermaidLook', look)}
+          />
+        </FormField>
+      {/each}
+    </div>
+
+    <div class="form-item">
+      <div class="label-item">{localize('label_mermaid-layout')}:</div>
+      {#each MERMAID_LAYOUTS as layout}
+        <FormField>
+          <span slot="label"> {localize(`mermaid_layout_${layout}`)} </span>
+          <Radio
+            disabled={!data.enable || !data.mdPlugins.includes('Mermaid')}
+            bind:group={data.mermaidLayout}
+            bind:value={layout}
+            on:change={() => updateConfig('mermaidLayout', layout)}
           />
         </FormField>
       {/each}

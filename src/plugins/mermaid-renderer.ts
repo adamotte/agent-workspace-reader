@@ -25,8 +25,8 @@ function initMermaid(theme: string, look: string, layout: string) {
     // Throw on bad syntax instead of injecting mermaid's own error SVG.
     suppressErrorRendering: true,
     theme: theme as any,
-    // Mermaid 12 defaults to the shadowed "neo" look, ELK's orthogonal layout,
-    // and narrow label wrapping; keep the classic Mermaid 9 appearance.
+    // Look and layout come from the popup (default classic + dagre, matching
+    // Mermaid 9). Mermaid 12 also wraps labels narrowly by default; widen it.
     look: look as any,
     layout,
     flowchart: { wrappingWidth: 600 },
