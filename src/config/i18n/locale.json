@@ -29,6 +29,8 @@
     "label_md-plugins": "Plugins",
     "light": "Light",
     "dark": "Dark",
+    "github-light": "GitHub Light",
+    "github-dark": "GitHub Dark",
     "dracula": "Dracula",
     "nord": "Nord",
     "one-dark": "One Dark",
