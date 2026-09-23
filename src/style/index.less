@@ -103,7 +103,9 @@ body.md-reader {
           // A wide table grows past both edges of the text column, staying
           // centered on it, until it reaches the page padding.
           > table {
-            width: max-content;
+            // fit-content wraps long prose cells within the text column and
+            // only grows past it when the columns can't fit even when wrapped.
+            width: fit-content;
             min-width: 100%;
             // 140px is the column's 70px horizontal padding on both sides.
             max-width: calc(100vw - var(--side-width) - 140px);
