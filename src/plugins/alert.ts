@@ -3,7 +3,15 @@ import type Token from 'markdown-it/lib/token'
 import { alert } from '@mdit/plugin-alert'
 import mContainer from 'markdown-it-container'
 
-export default function AlertPlugin(md: MarkdownIt) {
+// GitHub mode: only GitHub's own alerts (> [!NOTE] etc.), top level only.
+export default function AlertPlugin(
+  md: MarkdownIt,
+  { github = false }: { github?: boolean } = {},
+) {
+  if (github) {
+    md.use(alert, { deep: false })
+    return
+  }
   const customContainers = [
     [alert, { deep: true }],
     [

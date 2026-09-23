@@ -23,6 +23,12 @@ import copyIcon from '@/images/icon_copy.svg'
 import className from '@/config/class-name'
 import Ele, { svg } from './ele'
 import { escapeHtml } from 'markdown-it/lib/common/utils'
+import GithubCompatPlugin, { MathFencePlugin } from '@/core/github/compat'
+import {
+  renderFrontmatterTable,
+  splitFrontmatter,
+} from '@/core/github/frontmatter'
+import { renderWarningBanner, type WarningEnv } from '@/core/github/warnings'
 
 type Plugins = { [p: string]: ((a: MdOptions) => any[]) | any[] }
 const PLUGINS: Plugins = {
@@ -32,12 +38,13 @@ const PLUGINS: Plugins = {
   Ins: [mIns],
   Abbr: [mAbbr],
   Katex: [mKatex],
-  Mermaid: ({ theme, mermaidLook, mermaidLayout }) => [
+  Mermaid: ({ theme, mermaidLook, mermaidLayout, githubCompat }) => [
     mMermaid,
     {
       theme: isDarkTheme(theme) ? 'dark' : 'default',
-      look: mermaidLook,
-      layout: mermaidLayout,
+      // GitHub renders Mermaid with its classic look and dagre layout.
+      look: githubCompat ? 'classic' : mermaidLook,
+      layout: githubCompat ? 'dagre' : mermaidLayout,
     },
   ],
   Mark: [mMark],
@@ -45,16 +52,28 @@ const PLUGINS: Plugins = {
   Footnote: [mFootnote],
   TaskLists: [mTaskLists],
   TOC: [mToc],
-  Alert: [mAlert],
+  Alert: ({ githubCompat }) => [mAlert, { github: githubCompat }],
 }
 
 export interface MdOptions {
   [key: string]: any
   config?: MarkdownIt.Options
   plugins?: Array<string>
+  githubCompat?: boolean
 }
 
-function initRender({ config = {}, plugins = [...MD_PLUGINS] }: MdOptions) {
+// Plugins whose syntax GitHub doesn't support and that GitHub-compatible mode
+// leaves unparsed, so the source shows as GitHub would show it. (`~x~` is
+// strikethrough on GitHub, not subscript.) Sup, Ins and Mark stay installed so
+// their syntax can be flagged; see GithubCompatPlugin.
+const GITHUB_UNSUPPORTED_PLUGINS = ['Sub', 'Abbr', 'Deflist', 'TOC']
+
+function initRender(options: MdOptions) {
+  const {
+    config = {},
+    plugins = [...MD_PLUGINS],
+    githubCompat = false,
+  } = options
   const copyButton = new Ele<HTMLElement>(
     'button',
     {
@@ -72,7 +91,7 @@ function initRender({ config = {}, plugins = [...MD_PLUGINS] }: MdOptions) {
     breaks: false,
     linkify: true,
     xhtmlOut: true,
-    typographer: true,
+    typographer: !githubCompat,
     highlight(str: string, language: string) {
       if (language && hljs.getLanguage(language)) {
         try {
@@ -92,23 +111,27 @@ function initRender({ config = {}, plugins = [...MD_PLUGINS] }: MdOptions) {
 
   // parse email
   md.linkify.set({ fuzzyEmail: true })
-  // builtin plugins
-  md.use(mMultimdTable)
+  // builtin plugins; GitHub only has plain GFM tables
+  if (!githubCompat) md.use(mMultimdTable)
 
   // custom plugins
   plugins.forEach(name => {
+    if (githubCompat && GITHUB_UNSUPPORTED_PLUGINS.includes(name)) return
     let plugin = PLUGINS[name]
     if (typeof plugin === 'function') {
-      plugin = plugin(arguments[0])
+      plugin = plugin(options)
     }
     plugin && md.use(plugin[0], ...plugin.slice(1))
   })
 
-  if (plugins.includes('Mermaid')) {
+  if (plugins.includes('Mermaid') && !githubCompat) {
     // Install after diagram plugins so Graphviz can override Mermaid fences when
-    // the block content is actually DOT syntax.
+    // the block content is actually DOT syntax. GitHub doesn't render DOT.
     md.use(mGraphvizBlock)
   }
+
+  md.use(MathFencePlugin)
+  if (githubCompat) md.use(GithubCompatPlugin)
 
   return md
 }
@@ -250,15 +273,27 @@ const PURIFY_CONFIG: DOMPurify.Config = {
 interface MdRender {
   (code: string, options: MdOptions): string
   md?: MarkdownIt
+  githubCompat?: boolean
 }
 export const mdRender: MdRender = (code, options): string => {
   if (!mdRender.md || options) {
-    mdRender.md = initRender(options)
+    mdRender.md = initRender(options ?? {})
+    mdRender.githubCompat = !!options?.githubCompat
   }
-  // filter frontmatter
-  const filteredCode = removeFrontmatter(code)
-  const rawHtml = mdRender.md.render(filteredCode)
-  return DOMPurify.sanitize(rawHtml, PURIFY_CONFIG)
+  const env: WarningEnv = {}
+  let prefix = ''
+  let body: string
+  if (mdRender.githubCompat) {
+    // GitHub shows front matter as a table rather than hiding it.
+    const frontmatter = splitFrontmatter(code)
+    body = frontmatter ? frontmatter.body : code
+    prefix = frontmatter ? renderFrontmatterTable(frontmatter.yaml) : ''
+  } else {
+    body = removeFrontmatter(code)
+  }
+  const rawHtml = mdRender.md.render(body, env)
+  const banner = mdRender.githubCompat ? renderWarningBanner(env) : ''
+  return DOMPurify.sanitize(banner + prefix + rawHtml, PURIFY_CONFIG)
 }
 
 export default initRender

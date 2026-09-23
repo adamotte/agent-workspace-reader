@@ -77,6 +77,20 @@
     </div>
 
     <div class="form-item inline">
+      <span class="label-item" title={localize('hint_github-compat')}
+        >{localize('label_github-compat')}:</span
+      >
+      <FormField align="end">
+        <Switch
+          disabled={!data.enable}
+          bind:checked={data.githubCompat}
+          color="primary"
+          on:change={() => updateConfig('githubCompat', data.githubCompat)}
+        />
+      </FormField>
+    </div>
+
+    <div class="form-item inline">
       <span class="label-item">{localize('label_auto-refresh')}:</span>
       <FormField align="end">
         <Switch
@@ -124,11 +138,16 @@
 
     <div class="form-item">
       <div class="label-item">{localize('label_mermaid-look')}:</div>
+      {#if data.githubCompat}
+        <div class="hint">{localize('hint_mermaid-github')}</div>
+      {/if}
       {#each MERMAID_LOOKS as look}
         <FormField>
           <span slot="label"> {localize(`mermaid_look_${look}`)} </span>
           <Radio
-            disabled={!data.enable || !data.mdPlugins.includes('Mermaid')}
+            disabled={!data.enable ||
+              data.githubCompat ||
+              !data.mdPlugins.includes('Mermaid')}
             bind:group={data.mermaidLook}
             bind:value={look}
             on:change={() => updateConfig('mermaidLook', look)}
@@ -143,7 +162,9 @@
         <FormField>
           <span slot="label"> {localize(`mermaid_layout_${layout}`)} </span>
           <Radio
-            disabled={!data.enable || !data.mdPlugins.includes('Mermaid')}
+            disabled={!data.enable ||
+              data.githubCompat ||
+              !data.mdPlugins.includes('Mermaid')}
             bind:group={data.mermaidLayout}
             bind:value={layout}
             on:change={() => updateConfig('mermaidLayout', layout)}
@@ -182,6 +203,10 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
+  }
+  .hint {
+    font-size: 12px;
+    color: #24315899;
   }
   .label-item {
     font-weight: bolder;

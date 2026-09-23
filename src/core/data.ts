@@ -13,6 +13,7 @@ export interface Data {
   refresh?: boolean
   language?: string
   centered?: boolean
+  githubCompat?: boolean
   mdPlugins?: typeof MD_PLUGINS
   pageTheme?: typeof PAGE_THEMES[0]
   mermaidLook?: MermaidLook
@@ -25,6 +26,7 @@ export function getDefaultData(mergeData: Data = {}): Data {
     enable: true,
     refresh: false,
     centered: true,
+    githubCompat: true,
     hiddenSide: false,
     language: i18n().locale,
     mdPlugins: [...MD_PLUGINS],

@@ -96,6 +96,7 @@ function main(data: Data) {
       target.innerHTML = mdRender(code, {
         theme: toTheme(configData.pageTheme),
         plugins: configData.mdPlugins,
+        githubCompat: configData.githubCompat,
         mermaidLook: configData.mermaidLook,
         mermaidLayout: configData.mermaidLayout,
         ...options,

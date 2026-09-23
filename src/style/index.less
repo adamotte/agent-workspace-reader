@@ -166,6 +166,45 @@ body.md-reader {
             }
           }
         }
+        // GitHub-compatible mode: syntax that renders differently on GitHub
+        .md-reader__gh-warn {
+          text-decoration: underline wavy #d29922;
+          text-decoration-skip-ink: none;
+          cursor: help;
+        }
+        .md-reader__gh-warn-block {
+          margin: 16px 0 -8px;
+          padding: 4px 10px;
+          border-left: 3px solid #d29922;
+          background: #d2992222;
+          font-size: 13px;
+        }
+        .md-reader__gh-warn-banner {
+          margin-bottom: 16px;
+          padding: 8px 12px;
+          border: 1px solid #d2992288;
+          border-radius: 6px;
+          background: #d299221a;
+          font-size: 14px;
+          summary {
+            cursor: pointer;
+            font-weight: 600;
+          }
+          ul {
+            margin: 8px 0 0;
+          }
+        }
+        table.md-reader__gh-frontmatter {
+          table {
+            margin: 0;
+          }
+        }
+        .md-reader__gh-frontmatter-error {
+          padding: 8px 12px;
+          border: 1px solid #d14343;
+          border-radius: 6px;
+          color: #d14343;
+        }
         pre.md-reader__mermaid {
           overflow: auto;
           .md-reader__mermaid-svg svg {

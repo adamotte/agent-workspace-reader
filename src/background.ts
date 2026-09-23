@@ -49,6 +49,7 @@ const actionMap = {
   refresh: 'toggleRefresh',
   centered: 'toggleCentered',
   mdPlugins: 'updateMdPlugins',
+  githubCompat: 'updateMdPlugins',
   pageTheme: 'updatePageTheme',
   mermaidLook: 'updateMdPlugins',
   mermaidLayout: 'updateMdPlugins',
