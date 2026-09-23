@@ -1,7 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import MarkdownIt from 'markdown-it'
-import MermaidPlugin from '@md-reader/markdown-it-mermaid'
 
 const loadGraphviz = () => import('../src/core/graphviz.ts')
 
@@ -72,6 +71,7 @@ test('graphviz override still works after mermaid plugin is installed first', as
   const { isGraphvizCodeBlock, renderGraphvizPlaceholder } =
     await loadGraphviz()
   const md = new MarkdownIt()
+  const { default: MermaidPlugin } = await import('../src/core/mermaid.ts')
   md.use(MermaidPlugin)
 
   const fallbackFence = md.renderer.rules.fence?.bind(md.renderer.rules)

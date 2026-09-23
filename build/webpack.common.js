@@ -1,4 +1,5 @@
 const { resolve } = require('path')
+const webpack = require('webpack')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -71,6 +72,9 @@ module.exports = {
   },
   stats: 'errors-only',
   plugins: [
+    // Content scripts can't load webpack's lazy chunks (mermaid lazy-loads
+    // each diagram type), so bundle everything into the entry files.
+    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new FriendlyErrors(),
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({

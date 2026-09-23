@@ -164,6 +164,18 @@ body.md-reader {
             }
           }
         }
+        pre.md-reader__mermaid {
+          overflow: auto;
+          .md-reader__mermaid-svg svg {
+            display: block;
+            margin: 0 auto;
+          }
+          .md-reader__mermaid-error {
+            margin-top: 12px;
+            color: #d14343;
+            white-space: pre-wrap;
+          }
+        }
         pre.md-reader__graphviz {
           overflow: auto;
           padding: 16px;
