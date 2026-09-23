@@ -8,6 +8,7 @@ import className from '@/config/class-name'
 import type { Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
+import { decodeHash, legacySlug, slugify } from '@/core/slug'
 import {
   getHeads,
   getRawContainer,
@@ -281,6 +282,7 @@ function main(data: Data) {
     const encodeContent = getDecodeContent(content)
 
     head.setAttribute('id', encodeContent)
+    head.dataset.title = content
 
     const headAnchor = new Ele<HTMLElement>('a', {
       className: className.HEAD_ANCHOR,
@@ -312,7 +314,7 @@ function main(data: Data) {
         idCache[key] = 1
         return key
       }
-    })(encodeURIComponent(content.toLowerCase().replace(/\s+/g, '-')))
+    })(slugify(content))
   }
 
   function onScroll() {
@@ -359,19 +361,37 @@ function main(data: Data) {
     }
   }
 
+  function findHashTarget(): HTMLElement | undefined {
+    const hash = decodeHash(window.location.hash)
+    if (!hash) return
+    return (
+      headElements.find(head => head.getAttribute('id') === hash) ??
+      headElements.find(
+        head =>
+          legacySlug(head.dataset.title ?? '') ===
+          window.location.hash.slice(1),
+      )
+    )
+  }
+
   function updateAnchorPosition() {
-    if (window.location.hash) {
-      setTimeout(() => {
-        const hash = window.location.hash.slice(1)
-        const target = headElements.find(head => {
-          return head.getAttribute('id') === hash
-        })
-        if (target) {
-          const top = target.offsetTop
-          top && window.scrollTo(0, top)
-        }
-      })
+    const target = findHashTarget()
+    if (!target) return
+
+    const scrollToTarget = () => window.scrollTo(0, target.offsetTop)
+    setTimeout(scrollToTarget)
+
+    // Diagrams render asynchronously and grow the content above the target, so
+    // keep it pinned until the user scrolls or the page settles.
+    const observer = new ResizeObserver(scrollToTarget)
+    observer.observe(mdContent.ele)
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown']
+    const stop = () => {
+      observer.disconnect()
+      events.forEach(e => window.removeEventListener(e, stop))
     }
+    events.forEach(e => window.addEventListener(e, stop, { passive: true }))
+    setTimeout(stop, 10000)
   }
 }
 
