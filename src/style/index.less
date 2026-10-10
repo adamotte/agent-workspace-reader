@@ -134,6 +134,33 @@ body.md-reader {
         font-size: 12px;
         text-decoration: none;
       }
+      .md-reader__folder-sort {
+        position: relative;
+        flex: none;
+        display: grid;
+        width: 27px;
+        height: 27px;
+        place-items: center;
+        border: 1px solid var(--color-side-border);
+        border-radius: 5px;
+        color: var(--color-side);
+        cursor: pointer;
+        font-size: 17px;
+        line-height: 1;
+        &:hover,
+        &:focus-within {
+          background: var(--color-button-bg-hover);
+          color: var(--color-primary);
+        }
+        select {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+          opacity: 0;
+        }
+      }
       .md-reader__folder-tree {
         flex: 1 1 auto;
         min-height: 0;

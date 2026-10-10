@@ -14,6 +14,7 @@ import mKatex from '@traptitech/markdown-it-katex'
 import mMermaid from '@md-reader/markdown-it-mermaid'
 import mAlert from '@/plugins/alert'
 import mGraphvizBlock from '@/plugins/graphviz-block'
+import mWikiLink from '@/plugins/wiki-link'
 import mMultimdTable from 'markdown-it-multimd-table'
 import MD_PLUGINS from '@/config/md-plugins'
 import successIcon from '@/images/icon_success.svg'
@@ -88,6 +89,7 @@ function initRender({ config = {}, plugins = [...MD_PLUGINS] }: MdOptions) {
   md.linkify.set({ fuzzyEmail: true })
   // builtin plugins
   md.use(mMultimdTable)
+  md.use(mWikiLink)
 
   // custom plugins
   plugins.forEach(name => {
@@ -123,7 +125,10 @@ export const mdRender: MdRender = (code, options): string => {
   }
   // filter frontmatter
   const filteredCode = removeFrontmatter(code)
-  return mdRender.md.render(filteredCode)
+  return mdRender.md.render(filteredCode, {
+    wikiLinkSourceURL: options?.wikiLinkSourceURL,
+    wikiLinkRootURL: options?.wikiLinkRootURL,
+  })
 }
 
 export default initRender

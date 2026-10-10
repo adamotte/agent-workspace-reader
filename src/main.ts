@@ -8,10 +8,14 @@ import className from '@/config/class-name'
 import type { Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
+import { resolveWikiLink, resolveWikiLinks } from '@/core/wiki-link'
 import {
   getDirectoryName,
   getParentDirectoryURL,
+  isSameLocalURL,
   isLocalDirectoryPage,
+  isURLWithinRoot,
+  normalizeFolderRootURL,
   renderFolderBrowser,
 } from '@/core/folder'
 import {
@@ -32,6 +36,11 @@ function main(data: Data) {
   const configData = getDefaultData(data)
   const directoryPage = isLocalDirectoryPage()
   const localPage = window.location.protocol === 'file:'
+  const configuredRootURL = normalizeFolderRootURL(configData.folderRootPath)
+  const useConfiguredRoot = Boolean(
+    configuredRootURL &&
+      isURLWithinRoot(window.location.href, configuredRootURL),
+  )
   const directoryHTML = directoryPage
     ? document.documentElement.outerHTML
     : null
@@ -116,9 +125,14 @@ function main(data: Data) {
       target.innerHTML = mdRender(code, {
         theme: toTheme(configData.pageTheme),
         plugins: configData.mdPlugins,
+        wikiLinkSourceURL: window.location.href,
+        wikiLinkRootURL: useConfiguredRoot ? configuredRootURL : undefined,
         ...options,
       })
       const ele = target instanceof Ele ? target.ele : target
+      if (useConfiguredRoot && configuredRootURL) {
+        void resolveWikiLinks(ele, configuredRootURL)
+      }
       document.title = ele.querySelector('h1')?.textContent.trim() ?? ''
       globalEvent.emit(
         'contentRendered',
@@ -131,6 +145,19 @@ function main(data: Data) {
   mdContent.on(
     'click',
     async e => {
+      const clicked = e.target as HTMLElement
+      const unresolvedLink = clicked.closest<HTMLAnchorElement>(
+        `a.${className.WIKI_LINK}[data-wiki-unresolved="true"]`,
+      )
+      if (unresolvedLink && useConfiguredRoot && configuredRootURL) {
+        e.preventDefault()
+        const resolved = await resolveWikiLink(
+          unresolvedLink,
+          configuredRootURL,
+        )
+        if (resolved) window.location.href = resolved
+        return
+      }
       globalEvent.emit('click', e.target)
     },
     true,
@@ -172,14 +199,24 @@ function main(data: Data) {
         void storage.set('folderPaneRatio', ratio)
       },
     )
-    const rootURL = directoryPage
+    const fallbackRootURL = directoryPage
       ? window.location.href
       : getParentDirectoryURL(window.location.href)
+    const rootURL = useConfiguredRoot ? configuredRootURL : fallbackRootURL
     void renderFolderBrowser({
       container: folderBrowser.ele,
       rootURL,
-      currentURL: directoryPage ? undefined : window.location.href,
-      initialHTML: directoryPage ? directoryHTML : undefined,
+      currentURL: window.location.href,
+      initialHTML:
+        directoryPage && isSameLocalURL(rootURL, window.location.href)
+          ? directoryHTML
+          : undefined,
+      showParentLink: !useConfiguredRoot,
+      sortOrder: configData.folderSortOrder,
+      onSortOrderChange: sortOrder => {
+        configData.folderSortOrder = sortOrder
+        void storage.set('folderSortOrder', sortOrder)
+      },
     })
   }
   mdSide.append(mdOutline)

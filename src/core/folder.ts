@@ -1,4 +1,5 @@
 import className from '@/config/class-name'
+import { FOLDER_SORT_ORDERS, type FolderSortOrder } from '@/core/data'
 
 const MARKDOWN_EXTENSIONS = new Set([
   'md',
@@ -8,6 +9,16 @@ const MARKDOWN_EXTENSIONS = new Set([
   'markdown',
   'txt',
 ])
+
+const FOLDER_SORT_OPTIONS: Array<{
+  value: FolderSortOrder
+  label: string
+}> = [
+  { value: 'name-asc', label: '文件名 (A-Z)' },
+  { value: 'name-desc', label: '文件名 (Z-A)' },
+  { value: 'modified-desc', label: '编辑时间 (从新到旧)' },
+  { value: 'modified-asc', label: '编辑时间 (从旧到新)' },
+]
 
 export interface FolderEntry {
   name: string
@@ -27,6 +38,9 @@ interface FolderBrowserOptions {
   rootURL: string
   currentURL?: string
   initialHTML?: string
+  showParentLink?: boolean
+  sortOrder?: FolderSortOrder
+  onSortOrderChange?: (sortOrder: FolderSortOrder) => void
 }
 
 export function isLocalDirectoryPage(
@@ -45,6 +59,51 @@ export function getParentDirectoryURL(url: string): string {
   return new URL('./', url).href
 }
 
+export function normalizeFolderRootURL(value?: string): string | undefined {
+  const path = value?.trim()
+  if (!path) return undefined
+
+  try {
+    let target = path
+    if (/^[a-z]:[\\/]/i.test(target)) {
+      target = `file:///${target.replace(/\\/g, '/')}`
+    } else if (target.startsWith('/')) {
+      target = `file://${target}`
+    }
+
+    const url = new URL(target)
+    if (url.protocol !== 'file:') return undefined
+    url.hash = ''
+    url.search = ''
+    if (!url.pathname.endsWith('/')) url.pathname += '/'
+    return url.href
+  } catch {
+    return undefined
+  }
+}
+
+export function isURLWithinRoot(url: string, rootURL: string): boolean {
+  try {
+    const target = new URL(url)
+    const root = new URL(rootURL)
+    return (
+      target.protocol === root.protocol &&
+      target.host === root.host &&
+      decodeURLPath(target).startsWith(decodeURLPath(root))
+    )
+  } catch {
+    return false
+  }
+}
+
+export function isSameLocalURL(left: string, right: string): boolean {
+  try {
+    return normalizeURL(left) === normalizeURL(right)
+  } catch {
+    return false
+  }
+}
+
 export function getDirectoryName(url: string): string {
   const pathname = new URL(url).pathname.replace(/\/$/, '')
   const encodedName = pathname.split('/').pop()
@@ -59,6 +118,7 @@ export function getDirectoryName(url: string): string {
 export function parseDirectoryEntries(
   html: string,
   directoryURL: string,
+  sortOrder: FolderSortOrder = 'name-desc',
 ): FolderEntry[] {
   const base = new URL(directoryURL)
   const basePath = base.pathname.endsWith('/')
@@ -157,16 +217,9 @@ export function parseDirectoryEntries(
     }
   }
 
-  return entries.sort((left, right) => {
-    if (left.isDirectory !== right.isDirectory) {
-      return left.isDirectory ? -1 : 1
-    }
-    const modifiedDiff =
-      (right.modifiedTime ?? Number.NEGATIVE_INFINITY) -
-      (left.modifiedTime ?? Number.NEGATIVE_INFINITY)
-    if (modifiedDiff) return modifiedDiff
-    return right.name.localeCompare(left.name, 'zh-CN', { numeric: true })
-  })
+  return entries.sort((left, right) =>
+    compareFolderEntries(left, right, sortOrder),
+  )
 }
 
 export async function renderFolderBrowser({
@@ -174,8 +227,12 @@ export async function renderFolderBrowser({
   rootURL,
   currentURL,
   initialHTML,
+  showParentLink = true,
+  sortOrder = 'name-desc',
+  onSortOrderChange,
 }: FolderBrowserOptions): Promise<void> {
   container.replaceChildren()
+  let activeSortOrder = normalizeFolderSortOrder(sortOrder)
 
   const header = document.createElement('div')
   header.className = className.FOLDER_HEADER
@@ -192,7 +249,25 @@ export async function renderFolderBrowser({
   parentLink.title = '打开上级文件夹'
   parentLink.textContent = '上级'
 
-  header.append(rootLink, parentLink)
+  const sortControl = document.createElement('label')
+  sortControl.className = className.FOLDER_SORT
+  const sortIcon = document.createElement('span')
+  sortIcon.textContent = '⇅'
+  sortIcon.setAttribute('aria-hidden', 'true')
+  const sortSelect = document.createElement('select')
+  sortSelect.setAttribute('aria-label', '目录排序')
+  for (const option of FOLDER_SORT_OPTIONS) {
+    const optionElement = document.createElement('option')
+    optionElement.value = option.value
+    optionElement.textContent = option.label
+    sortSelect.append(optionElement)
+  }
+  sortSelect.value = activeSortOrder
+  updateSortControlTitle(sortControl, activeSortOrder)
+  sortControl.append(sortIcon, sortSelect)
+
+  header.append(rootLink, sortControl)
+  if (showParentLink) header.append(parentLink)
 
   const tree = document.createElement('ul')
   tree.className = className.FOLDER_TREE
@@ -203,24 +278,46 @@ export async function renderFolderBrowser({
 
   try {
     const html = initialHTML ?? (await fetchLocalText(rootURL))
-    const entries = parseDirectoryEntries(html, rootURL)
-    status.remove()
-    renderEntries(tree, entries, currentURL)
-    if (!entries.length) {
-      status.textContent = '没有 Markdown 文件'
-      container.insertBefore(status, tree)
+    let renderVersion = 0
+    const renderTree = async () => {
+      const version = ++renderVersion
+      const entries = parseDirectoryEntries(html, rootURL, activeSortOrder)
+      const nextTree = document.createElement('ul')
+      await renderEntries(nextTree, entries, currentURL, activeSortOrder)
+      if (version !== renderVersion) return
+
+      tree.replaceChildren(...Array.from(nextTree.childNodes))
+      status.remove()
+      requestAnimationFrame(() => {
+        tree
+          .querySelector(`.${className.FOLDER_FILE_ACTIVE}`)
+          ?.scrollIntoView({ block: 'nearest' })
+      })
+      if (!entries.length) {
+        status.textContent = '没有 Markdown 文件'
+        container.insertBefore(status, tree)
+      }
     }
+
+    sortSelect.addEventListener('change', () => {
+      activeSortOrder = normalizeFolderSortOrder(sortSelect.value)
+      updateSortControlTitle(sortControl, activeSortOrder)
+      onSortOrderChange?.(activeSortOrder)
+      void renderTree()
+    })
+    await renderTree()
   } catch (error) {
     status.classList.add(className.FOLDER_STATUS_ERROR)
     status.textContent = `目录读取失败：${error.message || error}`
   }
 }
 
-function renderEntries(
+async function renderEntries(
   list: HTMLUListElement,
   entries: FolderEntry[],
   currentURL?: string,
-) {
+  sortOrder: FolderSortOrder = 'name-desc',
+): Promise<void> {
   for (const entry of entries) {
     const item = document.createElement('li')
 
@@ -231,15 +328,19 @@ function renderEntries(
       summary.title = entry.url
       const children = document.createElement('ul')
       details.append(summary, children)
-      details.addEventListener(
-        'toggle',
-        async () => {
-          if (!details.open) return
+      let loadPromise: Promise<void> | undefined
+      const loadChildren = () => {
+        if (loadPromise) return loadPromise
+        loadPromise = (async () => {
           summary.classList.add(className.FOLDER_LOADING)
           try {
             const html = await fetchLocalText(entry.url)
-            const childEntries = parseDirectoryEntries(html, entry.url)
-            renderEntries(children, childEntries, currentURL)
+            const childEntries = parseDirectoryEntries(
+              html,
+              entry.url,
+              sortOrder,
+            )
+            await renderEntries(children, childEntries, currentURL, sortOrder)
             if (!childEntries.length) {
               const empty = document.createElement('li')
               empty.className = className.FOLDER_EMPTY
@@ -254,10 +355,19 @@ function renderEntries(
           } finally {
             summary.classList.remove(className.FOLDER_LOADING)
           }
-        },
-        { once: true },
-      )
+        })()
+        return loadPromise
+      }
+      details.addEventListener('toggle', () => {
+        if (details.open) void loadChildren()
+      })
       item.append(details)
+      list.append(item)
+
+      if (currentURL && isURLWithinRoot(currentURL, entry.url)) {
+        details.open = true
+        await loadChildren()
+      }
     } else {
       const link = document.createElement('a')
       link.href = entry.url
@@ -267,10 +377,50 @@ function renderEntries(
         link.classList.add(className.FOLDER_FILE_ACTIVE)
       }
       item.append(link)
+      list.append(item)
     }
-
-    list.append(item)
   }
+}
+
+function compareFolderEntries(
+  left: FolderEntry,
+  right: FolderEntry,
+  sortOrder: FolderSortOrder,
+): number {
+  if (left.isDirectory !== right.isDirectory) {
+    return left.isDirectory ? -1 : 1
+  }
+
+  const nameDiff = left.name.localeCompare(right.name, 'zh-CN', {
+    numeric: true,
+  })
+  if (sortOrder === 'name-asc') return nameDiff
+  if (sortOrder === 'name-desc') return -nameDiff
+
+  const leftTime = left.modifiedTime
+  const rightTime = right.modifiedTime
+  if (leftTime === undefined && rightTime !== undefined) return 1
+  if (leftTime !== undefined && rightTime === undefined) return -1
+  const modifiedDiff =
+    sortOrder === 'modified-desc' ? rightTime - leftTime : leftTime - rightTime
+  if (modifiedDiff) return modifiedDiff
+  return sortOrder === 'modified-desc' ? -nameDiff : nameDiff
+}
+
+function normalizeFolderSortOrder(value: string): FolderSortOrder {
+  return FOLDER_SORT_ORDERS.includes(value as FolderSortOrder)
+    ? (value as FolderSortOrder)
+    : 'name-desc'
+}
+
+function updateSortControlTitle(
+  control: HTMLElement,
+  sortOrder: FolderSortOrder,
+) {
+  const label = FOLDER_SORT_OPTIONS.find(
+    option => option.value === sortOrder,
+  )?.label
+  control.title = `排序：${label}`
 }
 
 function fetchLocalText(url: string): Promise<string> {
@@ -307,11 +457,18 @@ function decodeName(name: string): string {
 
 function sameFileURL(left: string, right?: string): boolean {
   if (!right) return false
-  const normalized = (url: string) => {
-    const parsed = new URL(url)
-    parsed.hash = ''
-    parsed.search = ''
-    return parsed.href
+  return normalizeURL(left) === normalizeURL(right)
+}
+
+function normalizeURL(url: string): string {
+  const parsed = new URL(url)
+  return `${parsed.protocol}//${parsed.host}${decodeURLPath(parsed)}`
+}
+
+function decodeURLPath(url: URL): string {
+  try {
+    return decodeURIComponent(url.pathname)
+  } catch {
+    return url.pathname
   }
-  return normalized(left) === normalized(right)
 }
