@@ -105,10 +105,11 @@ Cliquez sur l'icône de l'extension pour ouvrir ses réglages :
 4. **Compatible GitHub** : désactivez-le pour la syntaxe que GitHub ne prend pas en charge et pour choisir le style et la disposition des diagrammes Mermaid.
 5. **Plugins** : activez ou désactivez chaque plugin de syntaxe.
 6. **Extensions de fichier**, affichées par défaut dans l'arborescence à côté des icônes de type : désactivez-les pour n'avoir que les noms.
+7. **Édition**, désactivée par défaut : activez-la pour modifier les fichiers texte dans la page. Sa section contient le bouton **Autoriser l'enregistrement…** et la liste des dossiers autorisés.
 
 Ouvrez ensuite un fichier ou un dossier, par exemple `file:///C:/Users/moi/agents/atlas/AGENTS.md`, ou faites glisser un fichier dans le navigateur.
 
-**Autoriser l'écriture.** Cliquez **Autoriser l'enregistrement…** sous la racine dans le popup, ou simplement **Modifier** (ou <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>E</kbd>) sur un fichier : la boîte de dialogue de dossier du navigateur s'ouvre : choisissez le dossier que la page indique, votre racine de dossier local ou le dossier du fichier, ou n'importe quel dossier au-dessus. Cette autorisation vaut pour tous les fichiers du dossier choisi. Le navigateur l'oublie à sa fermeture ; le prochain **Modifier** ne demande alors qu'une confirmation. Le navigateur refuse quelques dossiers, comme la racine de votre profil utilisateur ou les dossiers système : choisissez alors un sous-dossier comme racine.
+**Autoriser l'écriture.** Édition activée, cliquez **Autoriser l'enregistrement…** dans le popup, ou simplement **Modifier** (ou <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>E</kbd>) sur un fichier ; édition désactivée, le crayon propose d'abord de l'activer. La boîte de dialogue de dossier du navigateur s'ouvre alors : choisissez le dossier que la page indique, votre racine de dossier local ou le dossier du fichier, ou n'importe quel dossier au-dessus. Cette autorisation vaut pour tous les fichiers du dossier choisi. Le navigateur l'oublie à sa fermeture ; le prochain **Modifier** ne demande alors qu'une confirmation. Le navigateur refuse quelques dossiers, comme la racine de votre profil utilisateur ou les dossiers système : choisissez alors un sous-dossier comme racine.
 
 Pour essayer, choisissez comme racine le dossier [`example/atlas-workspace`](./example/atlas-workspace) de ce dépôt, l'espace de travail des captures d'écran, et ouvrez son `AGENTS.md`.
 

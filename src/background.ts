@@ -344,6 +344,7 @@ const actionMap = {
   hiddenSide: 'toggleSide',
   showExtensions: 'toggleExtensions',
   folderRootPath: 'reload',
+  editing: 'toggleEditing',
 }
 
 function updatePage(key: keyof typeof actionMap, value?: any) {

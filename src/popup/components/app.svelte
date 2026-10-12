@@ -159,27 +159,44 @@
         on:keydown={event => event.key === 'Enter' && updateFolderRootPath()}
       />
       <div class="help-item">{localize('help_folder-root')}</div>
-      <button
-        class="grant-button"
-        type="button"
-        disabled={!data.enable || !normalizeFolderRootURL(data.folderRootPath)}
-        on:click={grantWrite}
-      >
-        {localize('label_grant-write')}
-      </button>
-      <div class="help-item">{localize('help_grant-write')}</div>
-      <div class="help-item grant-status">
-        {#if writeRoots.length}{grantStatus}{/if}
+    </div>
+
+    <div class="form-item inline">
+      <span class="label-item">{localize('label_editing')}:</span>
+      <FormField align="end">
+        <Switch
+          disabled={!data.enable}
+          bind:checked={data.editing}
+          color="primary"
+          on:change={() => updateConfig('editing', data.editing)}
+        />
+      </FormField>
+    </div>
+    <div class="form-item editing-section">
+      <div class="help-item">{localize('hint_editing')}</div>
+      {#if data.editing}
         <button
-          class="forget-button"
+          class="grant-button"
           type="button"
           disabled={!data.enable || !normalizeFolderRootURL(data.folderRootPath)}
-          title={localize('title_forget-write')}
-          on:click={forgetWrite}
+          on:click={grantWrite}
         >
-          {localize('label_forget-write')}
+          {localize('label_grant-write')}
         </button>
-      </div>
+        <div class="help-item">{localize('help_grant-write')}</div>
+        <div class="help-item grant-status">
+          {#if writeRoots.length}{grantStatus}{/if}
+          <button
+            class="forget-button"
+            type="button"
+            disabled={!data.enable || !normalizeFolderRootURL(data.folderRootPath)}
+            title={localize('title_forget-write')}
+            on:click={forgetWrite}
+          >
+            {localize('label_forget-write')}
+          </button>
+        </div>
+      {/if}
     </div>
 
     <div class="form-item">
@@ -311,6 +328,9 @@
     color: #24315899;
     font-size: 11px;
     line-height: 1.4;
+  }
+  .editing-section {
+    margin-top: -8px;
   }
   .grant-button {
     margin-top: 8px;

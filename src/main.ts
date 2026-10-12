@@ -136,6 +136,10 @@ function main(data: Data) {
     toggleExtensions(value) {
       document.body.classList.toggle(className.SHOW_EXTENSIONS, value)
     },
+    toggleEditing(value: boolean) {
+      if (!value && session && !session.dirty) stopEdit(true)
+      if (!value) hideBanner()
+    },
   }
   chrome.runtime.onMessage.addListener(({ action, data: { key, value } }) => {
     const oldValue = configData[key]
@@ -807,6 +811,10 @@ function main(data: Data) {
   // picker and the permission prompt need a user gesture.
   async function startEdit() {
     if (session || !canEdit()) return
+    if (!configData.editing) {
+      showEnableBanner()
+      return
+    }
     const url = fileURL
     const text = mdRaw
     const candidateRootURLs = Array.from(
@@ -1075,6 +1083,25 @@ function main(data: Data) {
         'error',
       )
     }
+  }
+
+  // Editing is off in the settings: one click turns it on and goes on to
+  // the folder grant, on the same user gesture.
+  function showEnableBanner() {
+    showBanner(localize('edit_disabled'), 'info', [
+      {
+        label: localize('edit_enable'),
+        run: () => {
+          configData.editing = true
+          chrome.runtime.sendMessage({
+            action: 'storage',
+            data: { key: 'editing', value: true },
+          })
+          hideBanner()
+          void startEdit()
+        },
+      },
+    ])
   }
 
   // The folder page's way to grant saving before any file is edited

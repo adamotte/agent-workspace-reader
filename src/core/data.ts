@@ -34,6 +34,8 @@ export interface Data {
   folderPaneRatio?: number
   folderRootPath?: string
   folderSortOrder?: FolderSortOrder
+  // The edit mode: off until the user turns it on
+  editing?: boolean
   // The rendered preview beside the editor in edit mode
   editorPreview?: boolean
   // The folders the user granted writing to, for the popup to show; the
@@ -54,6 +56,7 @@ export function getDefaultData(mergeData: Data = {}): Data {
     folderPaneRatio: 0.42,
     folderRootPath: '',
     folderSortOrder: 'name-asc',
+    editing: false,
     editorPreview: true,
     writeRoots: [],
     language: i18n().locale,
