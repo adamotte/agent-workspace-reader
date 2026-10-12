@@ -7,13 +7,13 @@
   ],
   "license": "MIT",
   "description": "Read the workspaces your agents produce: Markdown, text, JSON and YAML with a folder tree and wiki links.",
-  "homepage": "https://github.com/adamotte/md-reader#readme",
+  "homepage": "https://github.com/adamotte/agent-workspace-reader#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adamotte/md-reader.git"
+    "url": "git+https://github.com/adamotte/agent-workspace-reader.git"
   },
   "bugs": {
-    "url": "https://github.com/adamotte/md-reader/issues"
+    "url": "https://github.com/adamotte/agent-workspace-reader/issues"
   },
   "keywords": [
     "agent-workspace-reader",

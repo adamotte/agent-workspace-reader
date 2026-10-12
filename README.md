@@ -1,62 +1,153 @@
+<div align="center">
+
+<img src="./src/images/logo-stroke.svg" alt="Agent Workspace Reader logo" width="96">
+
 # Agent Workspace Reader
 
-<img alt="Agent Workspace Reader logo" src="./src/images/logo-stroke.svg" align="right" width="120">
+**Read the folders your AI agents write to, right in the browser: reports, plans, memory, skills, run logs, CSV and code, with a folder tree and wiki links.**
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Version](https://img.shields.io/github/package-json/v/adamotte/agent-workspace-reader?style=flat-square)](package.json)
+[![Manifest V3](https://img.shields.io/badge/manifest-v3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](src/manifest.json)
+[![Chrome | Edge](https://img.shields.io/badge/Chrome%20%7C%20Edge-extension-0078D7?style=flat-square&logo=microsoftedge&logoColor=white)](#-installation)
+[![Last commit](https://img.shields.io/github/last-commit/adamotte/agent-workspace-reader/main?style=flat-square)](https://github.com/adamotte/agent-workspace-reader/commits/main)
 
 English | [Français](./README-fr.md)
 
-Agent Workspace Reader is a browser extension for reading local workspaces, such as the folders your AI agents write their deliverables to: it renders Markdown, text, JSON and YAML files opened from `file://` URLs and lets you browse their folders from a side panel.
+</div>
 
-It is based on [md-reader](https://github.com/md-reader/md-reader) by Bener and merges two of its forks: [mdsakalu/md-reader](https://github.com/mdsakalu/md-reader) and [mxgnene01/md-reader](https://github.com/mxgnene01/md-reader).
+![A dependency audit written by an agent, rendered with its workspace tree and outline](docs/screenshots/hero.png)
 
-- **File formats**: renders local `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` and `.txt` files, JSON and YAML files as highlighted code, and extensionless `LICENSE`, `README`, `CHANGELOG` or `NOTICE` files as text.
-- **Folder browser**: the side panel lists the current folder with a type icon for each file, sorted by name or modified time, with or without file extensions. With a root folder set, it keeps the tree from the root down to the current file.
-- **Wiki links**: `[[folder/note|Alias]]` and `[[note]]` link to the matching local file.
-- **Syntax plugins**: emoji, superscripts/subscripts, task lists, math, Mermaid and Graphviz diagrams, table of contents, insertions, abbreviations, footnotes, alerts.
-- **Themes**: light/dark themes, a GitHub-compatible rendering mode and code highlighting.
-- **Hot reloading**: real-time document changes and centered display for better reading.
-- **Shortcuts**: toggle the side panel, the centered layout, hot reloading and the theme from the keyboard.
+Coding and research agents (Claude Code, Codex, Copilot, Cursor…) leave their work in plain files: an `AGENTS.md`, a `memory/` folder, `SKILL.md` files, plans, reports, run logs, traces and CSV exports. Agent Workspace Reader makes such a folder readable: open any of its files from a `file://` URL and the extension renders it, with the whole workspace in a side panel.
 
-![banner](./example/example-1.png)
+<!-- prettier-ignore -->
+> [!NOTE]
+> **Local and read-only.** The extension only runs on `file://` URLs and needs no permission beyond storing its own settings. It never modifies or uploads your files, and it doesn't load remote images or stylesheets: opening a document never contacts another host.
 
-The default theme styles are stored in https://github.com/md-reader/theme.
+---
 
-## Installation
+## ✨ Features
 
-Agent Workspace Reader is not published on extension stores: build it from source.
+### 📂 Browse the whole workspace
+
+- 🌳 **Folder tree** from a root folder down to the current file, with its ancestors expanded and the file highlighted
+- ⚡ **Files open in place**: clicking through the tree switches the document without reloading the page, and back and forward follow
+- 🏷️ **Type icons** for every file, extensions hidden or shown, sorted by name or modified time
+- 🔗 **Wiki links**: `[[decisions]]` and `[[skills/write-report/SKILL|write-report]]` resolve to the matching file under the root
+- 🧭 **Outline** of the current document, and a resizable side panel
+
+### 📝 Markdown the way GitHub shows it
+
+- ✅ **GitHub-compatible mode**, on by default: alerts, task lists, tables, footnotes, front matter and heading anchors, plus a banner listing what GitHub would render differently
+- 📊 **Diagrams and math**: Mermaid (classic, hand-drawn or neo look; dagre or ELK layout), Graphviz and KaTeX
+- 🧩 **Syntax plugins**: emoji, superscript, insertions, highlights and containers; with GitHub mode off, also subscript, abbreviations, definition lists, a `[[toc]]` table of contents and extended tables
+- 📋 **Code blocks** highlighted with a copy button, an image viewer and a raw source toggle
+
+### 🗂️ More than Markdown
+
+![CSV, JSON, YAML, Python, log and image files of an agent workspace](docs/screenshots/formats.png)
+
+| Kind            | Files                                                                                                                | Shown as                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Markdown        | `.md` `.mdx` `.mdc` `.mkd` `.markdown`                                                                               | Rendered document                                 |
+| Text            | `.txt`, `README`, `LICENSE`, `CHANGELOG`, `NOTICE`, `AUTHORS`, `COPYING`                                             | Rendered document                                 |
+| Data and config | `.json` `.yaml` `.yml` `.toml` `.ini` `.cfg` `.conf` `.properties` `.xml`                                            | Highlighted code                                  |
+| Code            | `.py` `.js` `.ts` `.sh` `.ps1` `.bat` `.sql` `.go` `.rs` `.java` `.c` `.cpp` `.cs` `.css`…, `Dockerfile`, `Makefile` | Highlighted code                                  |
+| Logs            | `.log`                                                                                                               | Plain text                                        |
+| Tables          | `.csv` `.tsv`                                                                                                        | Table, with the separator detected and adjustable |
+| Media           | Images (`.png` `.jpg` `.svg` `.webp`…), video (`.mp4` `.webm`), audio (`.mp3` `.wav` `.flac`…)                       | Viewer or player in the page                      |
+| Browser formats | `.html` `.pdf`                                                                                                       | The browser's own viewer, in a new tab            |
+
+### 🎨 15 themes
+
+![The same plan in nine of the fifteen themes](docs/screenshots/themes.png)
+
+Light, Dark, GitHub Light, GitHub Dark, Dracula, Nord, One Dark, Catppuccin Mocha, Rosé Pine, Gruvbox Dark, Tokyo Midnight, Monokai Pro, Solarized Dark, Solarized Light and Synthwave '84, or **Auto** to follow the system. Code highlighting follows the theme.
+
+### 🛋️ Reading comfort
+
+- 🔄 **Hot reload**: the page updates as the agent writes the file
+- 📐 **Centered layout** for long documents
+- ⌨️ **Keyboard shortcuts** for the side panel, layout, hot reload and theme
+- 🌐 **English and French** interface
+
+---
+
+## 📦 Installation
+
+Agent Workspace Reader isn't published on extension stores yet: build it from source, with Node.js 16 or later and [pnpm](https://pnpm.io).
 
 ```bash
-# Clone this repository
-git clone https://github.com/adamotte/md-reader.git && cd md-reader
-
-# Install dependencies
+git clone https://github.com/adamotte/agent-workspace-reader.git
+cd agent-workspace-reader
 pnpm install
-
-# Build the extension
 pnpm build
 ```
 
-The unpacked extension lands in `extension/` and the `agent-workspace-reader-xxx.zip` package in `dist/`.
+The unpacked extension lands in `extension/` and an `agent-workspace-reader-<version>.zip` package in `dist/`. Then, in Chrome or Edge:
 
-Then, in Chrome or Edge:
+1. Open `chrome://extensions/` (or `edge://extensions/`) and turn on **Developer mode**.
+2. Click **Load unpacked** and select the `extension/` folder.
+3. Open the extension's **Details** and turn on **Allow access to file URLs**: browsers keep extensions away from local files by default.
 
-1. Open `chrome://extensions/` (or `edge://extensions/`) and turn on Developer mode.
-2. Click "Load unpacked" and select the `extension/` folder.
+## 🔧 Configuration
 
-## Usage
+<img src="docs/screenshots/popup.png" alt="Settings popup" width="250" align="right">
 
-### Allowing File Access Permission
+Click the extension icon to open its settings:
 
-> For security reasons, Chrome doesn't let extensions access local files by default, so you need to enable it after installing the extension.
+1. **Local folder root**: set it to your agent's workspace, for example `C:\Users\me\agents\atlas` or `/Users/me/agents/atlas`. The side panel then keeps the tree from that root, and bare wiki links such as `[[decisions]]` are looked up under it.
+2. **Theme**: pick one of the 15 themes, or Auto.
+3. **Auto Refresh**: turn it on to follow a file while an agent writes it.
+4. **GitHub-compatible**: turn it off for the syntax GitHub doesn't support and to choose the Mermaid look and layout.
+5. **Plugins**: turn individual syntax plugins on or off.
+6. **File extensions**: show them in the tree, next to the type icons.
 
-In the Chrome Extensions management page, open the details of "Agent Workspace Reader" and turn on "Allow access to file URLs". Agent Workspace Reader only reads and displays your files: it never modifies or uploads them.
+Then open a file or a folder, such as `file:///C:/Users/me/agents/atlas/AGENTS.md`, or drag a file into the browser.
 
-Then open a local file or folder, such as `file:///C:/Users/name/Notes/`, or drag a Markdown file into the browser. Try it with [`example/example.md`](./example/example.md) from this repository.
+To try it, set the root to the [`example/atlas-workspace`](./example/atlas-workspace) folder of this repository, the workspace shown in the screenshots, and open its `AGENTS.md`.
 
-Set a root folder in the popup to keep the whole tree in the side panel and resolve bare wiki links. [LOCAL_BUILD.md](./LOCAL_BUILD.md) details how the folder browser behaves.
+[LOCAL_BUILD.md](./LOCAL_BUILD.md) details how the folder browser behaves.
 
-## License
+<br clear="right">
+
+## ⌨️ Keyboard shortcuts
+
+| Shortcut                                     | Action                                   |
+| -------------------------------------------- | ---------------------------------------- |
+| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> | Show or hide the side panel              |
+| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> | Toggle the centered layout               |
+| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> | Toggle hot reload                        |
+| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | Switch between the Light and Dark themes |
+
+Change them at `chrome://extensions/shortcuts` (or `edge://extensions/shortcuts`).
+
+## ⚠️ Known limitations
+
+- **Chromium only**: tested on Chrome and Edge. Firefox and Safari aren't supported.
+- **Hidden folders**: the tree skips folders whose name starts with a dot, such as `.claude/` or `.codex/`, and `node_modules/`. Their files still open from their URL.
+- **Unknown file types**, such as `.jsonl`, aren't listed in the tree.
+- **Large tables**: a CSV or TSV view shows its first 5,000 rows.
+- **Remote content**: remote images and stylesheets aren't loaded, by design. Links to remote pages still work.
+- **Markdown Reader**: if the original md-reader extension is installed, disable it so that the two extensions don't both render the same page.
+
+## 🛠️ Development
+
+```bash
+pnpm dev                          # build into extension/ and rebuild on change
+pnpm build                        # manifest, production build and zip
+node --test "tests/*.test.mjs"    # unit tests
+```
+
+The unit tests import the TypeScript sources directly, which needs Node.js 22.18 or later.
+
+## 🙏 Acknowledgements
+
+Agent Workspace Reader is based on [md-reader](https://github.com/md-reader/md-reader), whose default theme lives in [md-reader/theme](https://github.com/md-reader/theme), and merges two of its forks:
+
+- [mdsakalu/md-reader](https://github.com/mdsakalu/md-reader): GitHub-compatible rendering, DOMPurify sanitizing, Mermaid 12 and the extra themes
+- [mxgnene01/md-reader](https://github.com/mxgnene01/md-reader): the local folder browser and wiki links
+
+## 📄 License
 
 [MIT](./LICENSE)
-
-© 2018-present, [Bener](https://github.com/Heroor) (md-reader)
-© 2026-present, Anthony Damotte (Agent Workspace Reader)
