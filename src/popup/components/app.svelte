@@ -43,6 +43,11 @@
   function changeLocale(language) {
     localize = i18n(language)
   }
+
+  function updateFolderRootPath() {
+    data.folderRootPath = data.folderRootPath?.trim() || ''
+    updateConfig('folderRootPath', data.folderRootPath)
+  }
 </script>
 
 <main>
@@ -100,6 +105,19 @@
           on:change={() => updateConfig('refresh', data.refresh)}
         />
       </FormField>
+    </div>
+
+    <div class="form-item">
+      <div class="label-item">{localize('label_folder-root')}:</div>
+      <input
+        class="path-input"
+        disabled={!data.enable}
+        bind:value={data.folderRootPath}
+        placeholder={localize('placeholder_folder-root')}
+        on:change={updateFolderRootPath}
+        on:keydown={event => event.key === 'Enter' && updateFolderRootPath()}
+      />
+      <div class="help-item">{localize('help_folder-root')}</div>
     </div>
 
     <div class="form-item">
@@ -212,5 +230,24 @@
     font-weight: bolder;
     font-size: 13px;
     color: #243158e3;
+  }
+  .path-input {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 7px;
+    padding: 7px 8px;
+    border: 1px solid #24315870;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .path-input:focus {
+    border-color: var(--mdc-theme-primary);
+    outline: none;
+  }
+  .help-item {
+    margin-top: 4px;
+    color: #24315899;
+    font-size: 11px;
+    line-height: 1.4;
   }
 </style>

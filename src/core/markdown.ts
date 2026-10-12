@@ -15,6 +15,7 @@ import mKatex from '@traptitech/markdown-it-katex'
 import mMermaid from '@/core/mermaid'
 import mAlert from '@/plugins/alert'
 import mGraphvizBlock from '@/plugins/graphviz-block'
+import mWikiLink from '@/plugins/wiki-link'
 import mMultimdTable from 'markdown-it-multimd-table'
 import MD_PLUGINS from '@/config/md-plugins'
 import { isDarkTheme } from '@/config/page-themes'
@@ -113,6 +114,8 @@ function initRender(options: MdOptions) {
   md.linkify.set({ fuzzyEmail: true })
   // builtin plugins; GitHub only has plain GFM tables
   if (!githubCompat) md.use(mMultimdTable)
+  // wiki links stay on in GitHub mode: they drive local vault navigation
+  md.use(mWikiLink)
 
   // custom plugins
   plugins.forEach(name => {
@@ -265,6 +268,10 @@ const PURIFY_CONFIG: DOMPurify.Config = {
   ],
   ALLOW_DATA_ATTR: true,
   ALLOW_ARIA_ATTR: true,
+  // DOMPurify's default URI allow-list plus file:, which wiki links resolve to
+  // when a local vault is browsed. markdown-it still rejects file: in plain links.
+  ALLOWED_URI_REGEXP:
+    /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix|file):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
   // Mermaid flowchart labels are HTML inside <foreignObject>; DOMPurify drops
   // HTML under SVG unless the parent is listed as an integration point.
   HTML_INTEGRATION_POINTS: { 'annotation-xml': true, foreignobject: true },
@@ -280,7 +287,13 @@ export const mdRender: MdRender = (code, options): string => {
     mdRender.md = initRender(options ?? {})
     mdRender.githubCompat = !!options?.githubCompat
   }
-  const env: WarningEnv = {}
+  const env: WarningEnv & {
+    wikiLinkSourceURL?: string
+    wikiLinkRootURL?: string
+  } = {
+    wikiLinkSourceURL: options?.wikiLinkSourceURL,
+    wikiLinkRootURL: options?.wikiLinkRootURL,
+  }
   let prefix = ''
   let body: string
   if (mdRender.githubCompat) {

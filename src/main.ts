@@ -9,6 +9,16 @@ import type { Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
 import { decodeHash, legacySlug, slugify } from '@/core/slug'
+import { resolveWikiLink, resolveWikiLinks } from '@/core/wiki-link'
+import {
+  getDirectoryName,
+  getParentDirectoryURL,
+  isSameLocalURL,
+  isLocalDirectoryPage,
+  isURLWithinRoot,
+  normalizeFolderRootURL,
+  renderFolderBrowser,
+} from '@/core/folder'
 import {
   getHeads,
   getRawContainer,
@@ -25,6 +35,16 @@ import '@/style/index.less'
 
 function main(data: Data) {
   const configData = getDefaultData(data)
+  const directoryPage = isLocalDirectoryPage()
+  const localPage = window.location.protocol === 'file:'
+  const configuredRootURL = normalizeFolderRootURL(configData.folderRootPath)
+  const useConfiguredRoot = Boolean(
+    configuredRootURL &&
+      isURLWithinRoot(window.location.href, configuredRootURL),
+  )
+  const directoryHTML = directoryPage
+    ? document.documentElement.outerHTML
+    : null
   const actions = {
     reload() {
       window.location.reload()
@@ -45,7 +65,7 @@ function main(data: Data) {
     },
     toggleRefresh(value) {
       clearTimeout(pollingTimer)
-      value && polling()
+      value && !directoryPage && polling()
     },
     toggleCentered(value) {
       mdContent.classList.toggle('centered', value)
@@ -60,7 +80,10 @@ function main(data: Data) {
     actions[action]?.(value, oldValue)
   })
 
-  if (!configData.enable || !CONTENT_TYPES.includes(document.contentType)) {
+  if (
+    !configData.enable ||
+    (!directoryPage && !CONTENT_TYPES.includes(document.contentType))
+  ) {
     return
   }
 
@@ -79,9 +102,16 @@ function main(data: Data) {
     configData.hiddenSide,
   )
 
-  const rawContainer = getRawContainer()
+  const rawContainer = directoryPage ? null : getRawContainer()
+  if (directoryPage) {
+    document.body.replaceChildren()
+  }
   lifecycle.init(rawContainer)
-  mdRaw = rawContainer?.textContent
+  mdRaw = directoryPage
+    ? `# 📁 ${escapeMarkdown(
+        getDirectoryName(window.location.href),
+      )}\n\n从左侧文件夹目录选择 Markdown 文件。`
+    : rawContainer?.textContent
 
   /* render content */
   const mdContent = new Ele<HTMLElement>('article', {
@@ -99,9 +129,14 @@ function main(data: Data) {
         githubCompat: configData.githubCompat,
         mermaidLook: configData.mermaidLook,
         mermaidLayout: configData.mermaidLayout,
+        wikiLinkSourceURL: window.location.href,
+        wikiLinkRootURL: useConfiguredRoot ? configuredRootURL : undefined,
         ...options,
       })
       const ele = target instanceof Ele ? target.ele : target
+      if (useConfiguredRoot && configuredRootURL) {
+        void resolveWikiLinks(ele, configuredRootURL)
+      }
       document.title = ele.querySelector('h1')?.textContent.trim() ?? ''
       globalEvent.emit(
         'contentRendered',
@@ -114,6 +149,19 @@ function main(data: Data) {
   mdContent.on(
     'click',
     async e => {
+      const clicked = e.target as HTMLElement
+      const unresolvedLink = clicked.closest<HTMLAnchorElement>(
+        `a.${className.WIKI_LINK}[data-wiki-unresolved="true"]`,
+      )
+      if (unresolvedLink && useConfiguredRoot && configuredRootURL) {
+        e.preventDefault()
+        const resolved = await resolveWikiLink(
+          unresolvedLink,
+          configuredRootURL,
+        )
+        if (resolved) window.location.href = resolved
+        return
+      }
       globalEvent.emit('click', e.target)
     },
     true,
@@ -126,7 +174,56 @@ function main(data: Data) {
   )
 
   /* render side */
-  const mdSide = new Ele<HTMLElement>('ul', { className: className.MD_SIDE })
+  const mdOutline = new Ele<HTMLElement>('ul', {
+    className: className.MD_OUTLINE,
+  })
+  const mdSide = new Ele<HTMLElement>('aside', {
+    className: className.MD_SIDE,
+  })
+  if (localPage) {
+    const folderBrowser = new Ele<HTMLElement>('nav', {
+      className: className.FOLDER_BROWSER,
+    })
+    const folderResizer = new Ele<HTMLElement>('div', {
+      className: className.FOLDER_RESIZER,
+      role: 'separator',
+      tabindex: '0',
+      title: '拖动调整文件夹与目录高度；双击恢复默认',
+      'aria-label': '调整文件夹与目录高度',
+      'aria-orientation': 'horizontal',
+    })
+    mdSide.append([folderBrowser, folderResizer])
+    setupFolderPaneResize(
+      mdSide.ele,
+      folderBrowser.ele,
+      folderResizer.ele,
+      configData.folderPaneRatio,
+      ratio => {
+        configData.folderPaneRatio = ratio
+        void storage.set('folderPaneRatio', ratio)
+      },
+    )
+    const fallbackRootURL = directoryPage
+      ? window.location.href
+      : getParentDirectoryURL(window.location.href)
+    const rootURL = useConfiguredRoot ? configuredRootURL : fallbackRootURL
+    void renderFolderBrowser({
+      container: folderBrowser.ele,
+      rootURL,
+      currentURL: window.location.href,
+      initialHTML:
+        directoryPage && isSameLocalURL(rootURL, window.location.href)
+          ? directoryHTML
+          : undefined,
+      showParentLink: !useConfiguredRoot,
+      sortOrder: configData.folderSortOrder,
+      onSortOrderChange: sortOrder => {
+        configData.folderSortOrder = sortOrder
+        void storage.set('folderSortOrder', sortOrder)
+      },
+    })
+  }
+  mdSide.append(mdOutline)
   let idCache: { [content: string]: number } = Object.create(null)
   let headElements: HTMLElement[] = []
   let sideLiElements: HTMLElement[] = []
@@ -143,15 +240,17 @@ function main(data: Data) {
   document.addEventListener('scroll', throttle(onScroll, 100))
 
   /* render raw toggle button */
-  const rawToggleBtn = new Ele<HTMLElement>(
-    'button',
-    {
-      className: [className.MD_BUTTON, className.CODE_TOGGLE_BTN],
-      title: 'Toggle raw',
-    },
-    svg(codeIcon),
-  )
-  rawToggleBtn.on('click', () => {
+  const rawToggleBtn = directoryPage
+    ? null
+    : new Ele<HTMLElement>(
+        'button',
+        {
+          className: [className.MD_BUTTON, className.CODE_TOGGLE_BTN],
+          title: 'Toggle raw',
+        },
+        svg(codeIcon),
+      )
+  rawToggleBtn?.on('click', () => {
     lifecycle.toggleRaw([mdBody, mdSide])
   })
 
@@ -219,7 +318,7 @@ function main(data: Data) {
   const buttonWrap = new Ele<HTMLElement>(
     'div',
     { className: className.BUTTON_WRAP_ELE },
-    [sideExpandBtn, rawToggleBtn, goTopBtn],
+    [sideExpandBtn, rawToggleBtn, goTopBtn].filter(Boolean),
   )
 
   /* mount elements */
@@ -236,7 +335,7 @@ function main(data: Data) {
   })
 
   /* auto refresh */
-  if (configData.refresh) {
+  if (configData.refresh && !directoryPage) {
     polling()
   }
 
@@ -270,8 +369,8 @@ function main(data: Data) {
     headElements = getHeads(mdContent)
     df = new Ele<DocumentFragment>('#document-fragment')
     sideLiElements = headElements.reduce(handleHeadItem, [])
-    mdSide.innerHTML = null
-    mdSide.append(df)
+    mdOutline.innerHTML = null
+    mdOutline.append(df)
     setTimeout(onScroll, 0)
   }
 
@@ -394,6 +493,112 @@ function main(data: Data) {
     events.forEach(e => window.addEventListener(e, stop, { passive: true }))
     setTimeout(stop, 10000)
   }
+}
+
+function escapeMarkdown(value: string): string {
+  return value.replace(/([\\`*_{}\[\]()<>#+\-.!|])/g, '\\$1')
+}
+
+const DEFAULT_FOLDER_PANE_RATIO = 0.42
+const MIN_FOLDER_PANE_RATIO = 0.15
+const MAX_FOLDER_PANE_RATIO = 0.8
+const MIN_PANE_HEIGHT = 96
+
+function setupFolderPaneResize(
+  side: HTMLElement,
+  folder: HTMLElement,
+  resizer: HTMLElement,
+  initialRatio: number,
+  onChange: (ratio: number) => void,
+) {
+  let ratio = clampFolderPaneRatio(initialRatio)
+  let dragging = false
+
+  const applyRatio = (value: number) => {
+    ratio = clampFolderPaneRatio(value)
+    folder.style.flexBasis = `${ratio * 100}%`
+    resizer.setAttribute('aria-valuenow', String(Math.round(ratio * 100)))
+  }
+
+  const getLayout = () => {
+    const style = getComputedStyle(side)
+    const paddingTop = Number.parseFloat(style.paddingTop) || 0
+    const paddingBottom = Number.parseFloat(style.paddingBottom) || 0
+    const availableHeight = Math.max(
+      1,
+      side.clientHeight - paddingTop - paddingBottom - resizer.offsetHeight,
+    )
+    const minHeight = Math.min(MIN_PANE_HEIGHT, availableHeight / 2)
+    return {
+      availableHeight,
+      minHeight,
+      top: side.getBoundingClientRect().top + paddingTop,
+    }
+  }
+
+  const applyHeight = (height: number) => {
+    const { availableHeight, minHeight } = getLayout()
+    const nextHeight = Math.min(
+      Math.max(height, minHeight),
+      availableHeight - minHeight,
+    )
+    ratio = clampFolderPaneRatio(nextHeight / availableHeight)
+    folder.style.flexBasis = `${nextHeight}px`
+    resizer.setAttribute('aria-valuenow', String(Math.round(ratio * 100)))
+  }
+
+  const finishResize = () => {
+    if (!dragging) return
+    dragging = false
+    document.body.classList.remove(className.SIDE_RESIZING)
+    document.removeEventListener('pointermove', onPointerMove)
+    document.removeEventListener('pointerup', finishResize)
+    document.removeEventListener('pointercancel', finishResize)
+    applyRatio(ratio)
+    onChange(ratio)
+  }
+
+  const onPointerMove = (event: PointerEvent) => {
+    if (!dragging) return
+    applyHeight(event.clientY - getLayout().top)
+  }
+
+  resizer.addEventListener('pointerdown', (event: PointerEvent) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    dragging = true
+    document.body.classList.add(className.SIDE_RESIZING)
+    document.addEventListener('pointermove', onPointerMove)
+    document.addEventListener('pointerup', finishResize)
+    document.addEventListener('pointercancel', finishResize)
+  })
+  resizer.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+    event.preventDefault()
+    const delta = event.key === 'ArrowUp' ? -24 : 24
+    applyHeight(folder.getBoundingClientRect().height + delta)
+    applyRatio(ratio)
+    onChange(ratio)
+  })
+  resizer.addEventListener('dblclick', () => {
+    applyRatio(DEFAULT_FOLDER_PANE_RATIO)
+    onChange(ratio)
+  })
+
+  resizer.setAttribute(
+    'aria-valuemin',
+    String(Math.round(MIN_FOLDER_PANE_RATIO * 100)),
+  )
+  resizer.setAttribute(
+    'aria-valuemax',
+    String(Math.round(MAX_FOLDER_PANE_RATIO * 100)),
+  )
+  applyRatio(ratio)
+}
+
+function clampFolderPaneRatio(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_FOLDER_PANE_RATIO
+  return Math.min(Math.max(value, MIN_FOLDER_PANE_RATIO), MAX_FOLDER_PANE_RATIO)
 }
 
 storage.get().then(main)
