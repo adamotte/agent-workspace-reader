@@ -228,6 +228,19 @@ function main(data: Data) {
     })
   }
   mdSide.append(mdOutline)
+  const sideResizer = new Ele<HTMLElement>('div', {
+    className: className.SIDE_RESIZER,
+    role: 'separator',
+    tabindex: '0',
+    title: localize('side_resize_title'),
+    'aria-label': localize('side_resize'),
+    'aria-orientation': 'vertical',
+  })
+  mdSide.append(sideResizer)
+  setupSideWidthResize(sideResizer.ele, configData.sideWidth, width => {
+    configData.sideWidth = width
+    void storage.set('sideWidth', width)
+  })
   let idCache: { [content: string]: number } = Object.create(null)
   let headElements: HTMLElement[] = []
   let sideLiElements: HTMLElement[] = []
@@ -501,6 +514,83 @@ function main(data: Data) {
 
 function escapeMarkdown(value: string): string {
   return value.replace(/([\\`*_{}\[\]()<>#+\-.!|])/g, '\\$1')
+}
+
+const DEFAULT_SIDE_WIDTH = 260
+const MIN_SIDE_WIDTH = 180
+const MAX_SIDE_WIDTH = 720
+// Leave at least this much of the viewport to the content column.
+const MIN_CONTENT_WIDTH = 320
+
+function setupSideWidthResize(
+  resizer: HTMLElement,
+  initialWidth: number,
+  onChange: (width: number) => void,
+) {
+  // The saved width; the applied one is clamped to the current viewport.
+  let width = clampSideWidth(initialWidth, Infinity)
+  let dragging = false
+
+  const render = () => {
+    const applied = clampSideWidth(width)
+    document.body.style.setProperty('--md-side-width', `${applied}px`)
+    resizer.setAttribute('aria-valuenow', String(applied))
+  }
+  const applyWidth = (value: number) => {
+    width = clampSideWidth(value)
+    render()
+  }
+
+  const finishResize = () => {
+    if (!dragging) return
+    dragging = false
+    document.body.classList.remove(className.SIDE_WIDTH_RESIZING)
+    document.removeEventListener('pointermove', onPointerMove)
+    document.removeEventListener('pointerup', finishResize)
+    document.removeEventListener('pointercancel', finishResize)
+    onChange(width)
+  }
+
+  const onPointerMove = (event: PointerEvent) => {
+    if (dragging) applyWidth(event.clientX)
+  }
+
+  resizer.addEventListener('pointerdown', (event: PointerEvent) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    dragging = true
+    document.body.classList.add(className.SIDE_WIDTH_RESIZING)
+    document.addEventListener('pointermove', onPointerMove)
+    document.addEventListener('pointerup', finishResize)
+    document.addEventListener('pointercancel', finishResize)
+  })
+  resizer.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    event.preventDefault()
+    applyWidth(width + (event.key === 'ArrowLeft' ? -16 : 16))
+    onChange(width)
+  })
+  resizer.addEventListener('dblclick', () => {
+    applyWidth(DEFAULT_SIDE_WIDTH)
+    onChange(width)
+  })
+  window.addEventListener('resize', render)
+
+  resizer.setAttribute('aria-valuemin', String(MIN_SIDE_WIDTH))
+  resizer.setAttribute('aria-valuemax', String(MAX_SIDE_WIDTH))
+  render()
+}
+
+function clampSideWidth(
+  value: number,
+  viewportWidth: number = window.innerWidth,
+): number {
+  if (!Number.isFinite(value)) return DEFAULT_SIDE_WIDTH
+  const max = Math.max(
+    MIN_SIDE_WIDTH,
+    Math.min(MAX_SIDE_WIDTH, viewportWidth - MIN_CONTENT_WIDTH),
+  )
+  return Math.round(Math.min(Math.max(value, MIN_SIDE_WIDTH), max))
 }
 
 const DEFAULT_FOLDER_PANE_RATIO = 0.42

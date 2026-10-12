@@ -9,6 +9,7 @@ export default {
   MD_SIDE_ACTIVE: p`side-li--active`,
   FOLDER_BROWSER: p`folder-browser`,
   FOLDER_RESIZER: p`folder-resizer`,
+  SIDE_RESIZER: p`side-resizer`,
   FOLDER_HEADER: p`folder-header`,
   FOLDER_ROOT: p`folder-root`,
   FOLDER_PARENT: p`folder-parent`,
@@ -31,6 +32,7 @@ export default {
   SIDE_COLLAPSED: 'side-collapsed',
   SIDE_EXPANDED: 'side-expanded',
   SIDE_RESIZING: 'side-resizing',
+  SIDE_WIDTH_RESIZING: 'side-width-resizing',
   MODAL: p`modal`,
   ZOOM_IMAGE: p`zoom-image`,
 }
