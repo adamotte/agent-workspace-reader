@@ -23,7 +23,7 @@ import successIcon from '@/images/icon_success.svg'
 import copyIcon from '@/images/icon_copy.svg'
 import className from '@/config/class-name'
 import Ele, { svg } from './ele'
-import { escapeHtml } from 'markdown-it/lib/common/utils'
+import { escapeHtml } from 'markdown-it/lib/common/utils.mjs'
 import GithubCompatPlugin, { MathFencePlugin } from '@/core/github/compat'
 import {
   renderFrontmatterTable,

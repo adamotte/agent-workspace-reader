@@ -1,5 +1,5 @@
 import type MarkdownIt from 'markdown-it'
-import type StateInline from 'markdown-it/lib/rules_inline/state_inline'
+import type StateInline from 'markdown-it/lib/rules_inline/state_inline.mjs'
 import className from '@/config/class-name'
 
 interface WikiLinkEnvironment {
