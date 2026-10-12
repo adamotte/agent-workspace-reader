@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./src/images/logo-stroke.svg" alt="Logo Agent Workspace Reader" width="96">
+<img src="./src/images/logo.svg" alt="Logo Agent Workspace Reader" width="96">
 
 # Agent Workspace Reader
 

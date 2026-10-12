@@ -10,12 +10,24 @@ const htmlHeadTags = [
       content: 'no-referrer',
     },
   },
+  // PNGs drawn for each size: the browser picks the one that matches the
+  // screen's pixel density, where a scaled SVG blurs at 16 px.
   {
     tag: 'link',
     attrs: {
       rel: 'icon',
-      type: 'image/svg+xml',
-      href: getAssetsURL('images/logo-stroke.svg'),
+      type: 'image/png',
+      sizes: '16x16',
+      href: getAssetsURL('images/icon-16.png'),
+    },
+  },
+  {
+    tag: 'link',
+    attrs: {
+      rel: 'icon',
+      type: 'image/png',
+      sizes: '32x32',
+      href: getAssetsURL('images/icon-32.png'),
     },
   },
 ]

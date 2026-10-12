@@ -1,6 +1,6 @@
 <script>
   import Icon from './icon.svelte'
-  import logoIcon from '@/images/logo-stroke.svg'
+  import logoIcon from '@/images/logo.svg'
 </script>
 
 <h1>
