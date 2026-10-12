@@ -76,7 +76,7 @@ Clair, Sombre, GitHub clair, GitHub sombre, Dracula, Nord, One Dark, Catppuccin 
 
 ## 📦 Installation
 
-Agent Workspace Reader n'est pas encore publiée sur les boutiques d'extensions. Téléchargez `agent-workspace-reader-<version>.zip` depuis la [dernière release](https://github.com/adamotte/agent-workspace-reader/releases/latest) et décompressez-le dans un dossier que vous conserverez, par exemple `agent-workspace-reader/` : l'extension se charge depuis ce dossier.
+Agent Workspace Reader n'est pas encore publiée sur les boutiques d'extensions. Téléchargez `agent-workspace-reader-<date>.zip` depuis la [dernière release](https://github.com/adamotte/agent-workspace-reader/releases/latest) et décompressez-le dans un dossier que vous conserverez, par exemple `agent-workspace-reader/` : l'extension se charge depuis ce dossier.
 
 Pour la construire à partir des sources, avec Node.js 16 ou plus récent et [pnpm](https://pnpm.io) :
 
@@ -87,7 +87,7 @@ pnpm install
 pnpm build
 ```
 
-L'extension décompressée se trouve dans `extension/` et le même zip dans `dist/`.
+L'extension décompressée se trouve dans `extension/` et le zip, nommé d'après la version de `package.json`, dans `dist/`.
 
 Ensuite, dans Chrome ou Edge :
 
@@ -148,7 +148,7 @@ node --test "tests/*.test.mjs"    # tests unitaires
 
 Les tests unitaires importent directement les sources TypeScript, ce qui demande Node.js 22.18 ou plus récent.
 
-Le [workflow Build](.github/workflows/build.yml) lance les tests et le build à chaque push et pull request, et conserve le zip comme artefact du workflow. Quand un commit sur `main` porte une version de `package.json` qui n'a pas encore de release, il publie une release `v<version>` avec le zip en pièce jointe : c'est le changement de version qui publie.
+Le [workflow Build](.github/workflows/build.yml) lance les tests et le build à chaque push et pull request, et conserve le zip comme artefact du workflow. Chaque commit sur `main` est publié comme une release nommée d'après le jour, par exemple `2026.10.12`, avec le zip en pièce jointe ; une seconde release le même jour reçoit le hash court du commit en suffixe, par exemple `2026.10.12-4a6cac3`.
 
 ## 🙏 Remerciements
 

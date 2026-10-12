@@ -42,7 +42,8 @@ jobs:
           if-no-files-found: error
 
   release:
-    # Publish a release the first time a version from package.json reaches main.
+    # Publish every commit on main as a release named after the day (UTC),
+    # with the short commit hash appended when the day already has one.
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
@@ -59,15 +60,21 @@ jobs:
           name: agent-workspace-reader-${{ env.VERSION }}
           path: dist
 
-      - name: Create the release unless it already exists
+      - name: Create the release
         run: |
-          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            echo "Release v$VERSION already exists, nothing to publish."
+          exists() { gh release view "$1" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; }
+          tag="$(date -u +%Y.%m.%d)"
+          if exists "$tag"; then
+            tag="$tag-${GITHUB_SHA::7}"
+          fi
+          if exists "$tag"; then
+            echo "Release $tag already exists, nothing to publish."
             exit 0
           fi
-          gh release create "v$VERSION" \
+          mv "dist/agent-workspace-reader-$VERSION.zip" "dist/agent-workspace-reader-$tag.zip"
+          gh release create "$tag" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "v$VERSION" \
+            --title "$tag" \
             --generate-notes \
-            "dist/agent-workspace-reader-$VERSION.zip#agent-workspace-reader-$VERSION.zip"
+            "dist/agent-workspace-reader-$tag.zip"

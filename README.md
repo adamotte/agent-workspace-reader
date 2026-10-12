@@ -76,7 +76,7 @@ Light, Dark, GitHub Light, GitHub Dark, Dracula, Nord, One Dark, Catppuccin Moch
 
 ## 📦 Installation
 
-Agent Workspace Reader isn't published on extension stores yet. Download `agent-workspace-reader-<version>.zip` from the [latest release](https://github.com/adamotte/agent-workspace-reader/releases/latest) and unzip it into a folder you'll keep, for example `agent-workspace-reader/`: the extension loads from that folder.
+Agent Workspace Reader isn't published on extension stores yet. Download `agent-workspace-reader-<date>.zip` from the [latest release](https://github.com/adamotte/agent-workspace-reader/releases/latest) and unzip it into a folder you'll keep, for example `agent-workspace-reader/`: the extension loads from that folder.
 
 To build it from source instead, with Node.js 16 or later and [pnpm](https://pnpm.io):
 
@@ -87,7 +87,7 @@ pnpm install
 pnpm build
 ```
 
-The unpacked extension lands in `extension/` and the same zip in `dist/`.
+The unpacked extension lands in `extension/` and the zip, named after the version in `package.json`, in `dist/`.
 
 Then, in Chrome or Edge:
 
@@ -148,7 +148,7 @@ node --test "tests/*.test.mjs"    # unit tests
 
 The unit tests import the TypeScript sources directly, which needs Node.js 22.18 or later.
 
-The [Build workflow](.github/workflows/build.yml) runs the tests and the build on every push and pull request, and keeps the zip as a workflow artifact. When a commit on `main` carries a version from `package.json` that has no release yet, it publishes a `v<version>` release with the zip attached: bumping the version is what releases.
+The [Build workflow](.github/workflows/build.yml) runs the tests and the build on every push and pull request, and keeps the zip as a workflow artifact. Every commit on `main` is published as a release named after the day, such as `2026.10.12`, with the zip attached; a second release the same day gets the short commit hash appended, such as `2026.10.12-4a6cac3`.
 
 ## 🙏 Acknowledgements
 
