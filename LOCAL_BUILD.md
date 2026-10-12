@@ -20,7 +20,7 @@ and unzip it into a folder you'll keep: the extension loads from that folder.
    store, so two content scripts don't both handle Markdown pages.
 4. Click "Load unpacked" and select the unzipped folder.
 5. Open the extension's details and turn on "Allow access to file URLs".
-6. Optionally, set the local folder root in the popup, for example
+6. Optionally, set the workspace folder in the popup, for example
    `C:\Users\name\Notes` or `/Users/name/Obsidian`.
 
 To update, unzip the new release over the same folder and click the

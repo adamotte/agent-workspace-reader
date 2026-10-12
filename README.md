@@ -99,7 +99,7 @@ You can also [build it from source](#%EF%B8%8F-development).
 
 Click the extension icon to open its settings:
 
-1. **Local folder root**: set it to your agent's workspace, for example `C:\Users\me\agents\atlas` or `/Users/me/agents/atlas`. The side panel then keeps the tree from that root, and bare wiki links such as `[[decisions]]` are looked up under it.
+1. **Workspace**: set it to your agent's workspace folder, for example `C:\Users\me\agents\atlas` or `/Users/me/agents/atlas`. The side panel then keeps the tree from that root, and bare wiki links such as `[[decisions]]` are looked up under it.
 2. **Theme**: pick one of the 15 themes, or Auto.
 3. **Auto Refresh**, on by default: the page follows a file while an agent writes it.
 4. **GitHub-compatible**: turn it off for the syntax GitHub doesn't support and to choose the Mermaid look and layout.
@@ -109,7 +109,7 @@ Click the extension icon to open its settings:
 
 Then open a file or a folder, such as `file:///C:/Users/me/agents/atlas/AGENTS.md`, or drag a file into the browser.
 
-**Granting write access.** With editing on, click **Allow saving files…** in the popup, or just click **Edit** (or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>) on a file; with editing off, the pencil offers to turn it on first. The browser's folder dialog then opens: choose the folder the page names, your local folder root or the file's own folder, or any folder above it. That one grant covers every file under the folder you chose. Browsers forget the grant when they close; the next **Edit** then only asks for confirmation. The browser refuses a few folders, such as your user profile root or system folders: set a sub-folder as the root instead.
+**Granting write access.** With editing on, click **Allow saving files…** in the popup, or just click **Edit** (or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>) on a file; with editing off, the pencil offers to turn it on first. The browser's folder dialog then opens: choose the folder the page names, your workspace or the file's own folder, or any folder above it. That one grant covers every file under the folder you chose. Browsers forget the grant when they close; the next **Edit** then only asks for confirmation. The browser refuses a few folders, such as your user profile root or system folders: set a sub-folder as the workspace instead.
 
 To try it, set the root to the [`example/atlas-workspace`](./example/atlas-workspace) folder of this repository, the workspace shown in the screenshots, and open its `AGENTS.md`.
 

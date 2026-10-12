@@ -99,7 +99,7 @@ Vous pouvez aussi la [construire à partir des sources](#%EF%B8%8F-développemen
 
 Cliquez sur l'icône de l'extension pour ouvrir ses réglages :
 
-1. **Dossier local racine** : indiquez l'espace de travail de votre agent, par exemple `C:\Users\moi\agents\atlas` ou `/Users/moi/agents/atlas`. Le panneau latéral garde alors l'arborescence depuis cette racine, et les liens wiki courts comme `[[decisions]]` y sont recherchés.
+1. **Espace de travail** : indiquez le dossier de travail de votre agent, par exemple `C:\Users\moi\agents\atlas` ou `/Users/moi/agents/atlas`. Le panneau latéral garde alors l'arborescence depuis cette racine, et les liens wiki courts comme `[[decisions]]` y sont recherchés.
 2. **Thème** : choisissez l'un des 15 thèmes, ou Auto.
 3. **Actualisation auto**, active par défaut : la page suit un fichier pendant qu'un agent l'écrit.
 4. **Compatible GitHub** : désactivez-le pour la syntaxe que GitHub ne prend pas en charge et pour choisir le style et la disposition des diagrammes Mermaid.
@@ -109,7 +109,7 @@ Cliquez sur l'icône de l'extension pour ouvrir ses réglages :
 
 Ouvrez ensuite un fichier ou un dossier, par exemple `file:///C:/Users/moi/agents/atlas/AGENTS.md`, ou faites glisser un fichier dans le navigateur.
 
-**Autoriser l'écriture.** Édition activée, cliquez **Autoriser l'enregistrement…** dans le popup, ou simplement **Modifier** (ou <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>E</kbd>) sur un fichier ; édition désactivée, le crayon propose d'abord de l'activer. La boîte de dialogue de dossier du navigateur s'ouvre alors : choisissez le dossier que la page indique, votre racine de dossier local ou le dossier du fichier, ou n'importe quel dossier au-dessus. Cette autorisation vaut pour tous les fichiers du dossier choisi. Le navigateur l'oublie à sa fermeture ; le prochain **Modifier** ne demande alors qu'une confirmation. Le navigateur refuse quelques dossiers, comme la racine de votre profil utilisateur ou les dossiers système : choisissez alors un sous-dossier comme racine.
+**Autoriser l'écriture.** Édition activée, cliquez **Autoriser l'enregistrement…** dans le popup, ou simplement **Modifier** (ou <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>E</kbd>) sur un fichier ; édition désactivée, le crayon propose d'abord de l'activer. La boîte de dialogue de dossier du navigateur s'ouvre alors : choisissez le dossier que la page indique, votre espace de travail ou le dossier du fichier, ou n'importe quel dossier au-dessus. Cette autorisation vaut pour tous les fichiers du dossier choisi. Le navigateur l'oublie à sa fermeture ; le prochain **Modifier** ne demande alors qu'une confirmation. Le navigateur refuse quelques dossiers, comme la racine de votre profil utilisateur ou les dossiers système : choisissez alors un sous-dossier comme espace de travail.
 
 Pour essayer, choisissez comme racine le dossier [`example/atlas-workspace`](./example/atlas-workspace) de ce dépôt, l'espace de travail des captures d'écran, et ouvrez son `AGENTS.md`.
 
