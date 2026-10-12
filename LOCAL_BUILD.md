@@ -8,31 +8,24 @@ Agent Workspace Reader is based on [md-reader](https://github.com/md-reader/md-r
 - [mxgnene01/md-reader](https://github.com/mxgnene01/md-reader): local folder
   browser and Obsidian-style wiki links.
 
-## Build
-
-```bash
-pnpm install
-pnpm run build
-```
-
-The unpacked extension lands in `extension/`, the
-`agent-workspace-reader-<version>.zip` package in `dist/`.
-
-The same zip is attached to each
-[GitHub release](https://github.com/adamotte/agent-workspace-reader/releases),
-built by `.github/workflows/build.yml`.
-
 ## Install
+
+Download `agent-workspace-reader-<date>.zip` from the
+[latest release](https://github.com/adamotte/agent-workspace-reader/releases/latest)
+and unzip it into a folder you'll keep: the extension loads from that folder.
 
 1. Open `chrome://extensions/` (or `edge://extensions/`).
 2. Turn on Developer mode.
 3. Disable Markdown Reader, the original extension, if it is installed from a
    store, so two content scripts don't both handle Markdown pages.
-4. Click "Load unpacked" and select the `extension/` folder, or the folder
-   where you unzipped a release.
+4. Click "Load unpacked" and select the unzipped folder.
 5. Open the extension's details and turn on "Allow access to file URLs".
 6. Optionally, set the local folder root in the popup, for example
    `C:\Users\name\Notes` or `/Users/name/Obsidian`.
+
+To update, unzip the new release over the same folder and click the
+extension's reload button on `chrome://extensions/`. You can also
+[build it from source](#build).
 
 ## Use
 
@@ -65,3 +58,22 @@ built by `.github/workflows/build.yml`.
 - Drag the side panel's right edge to change its width, and the line between
   the folder list and the outline to change their heights. Both are saved;
   double-click a handle to reset it.
+
+## Build
+
+Building needs Node.js 16 or later and [pnpm](https://pnpm.io).
+
+```bash
+pnpm install
+pnpm run build
+```
+
+The unpacked extension lands in `extension/`, which "Load unpacked" accepts
+like the unzipped release, and the
+`agent-workspace-reader-<version>.zip` package, named after the version in
+`package.json`, in `dist/`.
+
+`.github/workflows/build.yml` runs the tests and the build on every push and
+pull request, and publishes every commit on `main` as a release named after
+the day, such as `2026.10.12`, or `2026.10.12-<short hash>` for a second
+release the same day, with the zip attached.
