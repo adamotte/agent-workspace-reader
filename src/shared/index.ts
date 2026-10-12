@@ -6,7 +6,17 @@ export const HEAD = document.head
 export const BODY = document.body
 export const RAW_SELECTOR = 'pre'
 export const HEADERS = 'h1, h2, h3, h4, h5, h6'
-export const CONTENT_TYPES = ['text/plain', 'text/markdown', 'text/x-markdown']
+export const CONTENT_TYPES = [
+  'text/plain',
+  'text/markdown',
+  'text/x-markdown',
+  // JSON and YAML files, shown as highlighted code
+  'application/json',
+  'application/yaml',
+  'application/x-yaml',
+  'text/yaml',
+  'text/x-yaml',
+]
 
 export const darkMediaQuery: MediaQueryList = window.matchMedia(
   '(prefers-color-scheme: dark)',
@@ -18,8 +28,9 @@ export const getMediaQueryTheme = (): Exclude<Theme, 'auto'> =>
 export const toTheme = (theme: Theme): Exclude<Theme, 'auto'> =>
   theme === 'auto' ? getMediaQueryTheme() : theme
 
-export const toColorScheme = (theme: Exclude<Theme, 'auto'>): 'light' | 'dark' =>
-  isDarkTheme(theme) ? 'dark' : 'light'
+export const toColorScheme = (
+  theme: Exclude<Theme, 'auto'>,
+): 'light' | 'dark' => (isDarkTheme(theme) ? 'dark' : 'light')
 
 export function getAssetsURL(path: string): string {
   return chrome.runtime.getURL(path)

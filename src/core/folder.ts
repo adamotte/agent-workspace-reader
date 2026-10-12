@@ -1,22 +1,21 @@
 import className from '@/config/class-name'
 import i18n from '@/config/i18n'
 import { FOLDER_SORT_ORDERS, type FolderSortOrder } from '@/core/data'
+import { createIcon, type IconName } from '@/core/file-icons'
+import {
+  getDisplayName,
+  getFileKind,
+  NATIVE_KINDS,
+  type FileKind,
+} from '@/core/file-types'
 
 type Localize = ReturnType<typeof i18n>
-
-const MARKDOWN_EXTENSIONS = new Set([
-  'md',
-  'mdx',
-  'mdc',
-  'mkd',
-  'markdown',
-  'txt',
-])
 
 export interface FolderEntry {
   name: string
   url: string
   isDirectory: boolean
+  kind?: FileKind
   modifiedTime?: number
 }
 
@@ -150,7 +149,8 @@ export function parseDirectoryEntries(
       ? relativePath.slice(0, -1)
       : relativePath
     if (!comparablePath || comparablePath.includes('/')) return
-    if (!isDirectory && !isMarkdownFile(comparablePath)) return
+    const kind = isDirectory ? undefined : getFileKind(comparablePath)
+    if (!isDirectory && !kind) return
     const knownEntry = seen.get(target.href)
     if (knownEntry) {
       if (
@@ -171,6 +171,7 @@ export function parseDirectoryEntries(
       name,
       url: target.href,
       isDirectory,
+      kind,
       modifiedTime: Number.isFinite(modifiedTimeHint)
         ? modifiedTimeHint
         : undefined,
@@ -236,7 +237,7 @@ export async function renderFolderBrowser({
   rootLink.href = rootURL
   rootLink.className = className.FOLDER_ROOT
   rootLink.title = rootURL
-  rootLink.textContent = `📁 ${getDirectoryName(rootURL)}`
+  rootLink.append(folderIcon('folder'), folderName(getDirectoryName(rootURL)))
 
   const parentLink = document.createElement('a')
   parentLink.href = new URL('../', rootURL).href
@@ -328,7 +329,12 @@ async function renderEntries(
     if (entry.isDirectory) {
       const details = document.createElement('details')
       const summary = document.createElement('summary')
-      summary.textContent = entry.name
+      summary.append(
+        folderIcon('chevron'),
+        folderIcon('folder'),
+        folderIcon('folder-open'),
+        folderName(entry.name),
+      )
       summary.title = entry.url
       const children = document.createElement('ul')
       details.append(summary, children)
@@ -382,7 +388,15 @@ async function renderEntries(
       const link = document.createElement('a')
       link.href = entry.url
       link.title = entry.name
-      link.textContent = entry.name
+      link.append(
+        folderIcon(entry.kind ?? 'text'),
+        folderName(getDisplayName(entry.name)),
+      )
+      if (entry.kind && NATIVE_KINDS.includes(entry.kind)) {
+        // The browser shows these itself; a new tab keeps the folder view.
+        link.target = '_blank'
+        link.rel = 'noopener'
+      }
       if (sameFileURL(entry.url, currentURL)) {
         link.classList.add(className.FOLDER_FILE_ACTIVE)
       }
@@ -452,9 +466,15 @@ function fetchLocalText(url: string, localize: Localize): Promise<string> {
   })
 }
 
-function isMarkdownFile(path: string): boolean {
-  const extension = path.split('.').pop()?.toLowerCase()
-  return MARKDOWN_EXTENSIONS.has(extension)
+function folderIcon(name: IconName): SVGSVGElement {
+  return createIcon(name, className.FOLDER_ICON)
+}
+
+function folderName(name: string): HTMLSpanElement {
+  const span = document.createElement('span')
+  span.className = className.FOLDER_NAME
+  span.textContent = name
+  return span
 }
 
 function decodeName(name: string): string {

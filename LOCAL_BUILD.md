@@ -31,8 +31,14 @@ The unpacked extension lands in `extension/`, the zip in `dist/`.
 ## Use
 
 - Opening a local `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` or `.txt` file
-  renders it, with the current folder's Markdown files and subfolders listed at
-  the top of the side panel and the current file highlighted.
+  renders it, with the current folder's files and subfolders listed at the top
+  of the side panel and the current file highlighted.
+- The folder list shows Markdown, text, JSON, YAML, HTML and PDF files plus
+  extensionless `LICENSE`, `README`, `CHANGELOG`, `NOTICE`, `AUTHORS`,
+  `COPYING` and `LICENCE`, each with a type icon and without its extension.
+  JSON and YAML files render as highlighted code and extensionless ones as
+  text, keeping the side panel. HTML and PDF files open in a new tab with the
+  browser's own viewer.
 - Opening a folder (`file:///C:/path/to/folder/`) shows the folder page.
 - Subfolders come first. The sort button switches between name and modified
   time, ascending or descending; the choice is saved.

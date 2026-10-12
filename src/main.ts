@@ -9,6 +9,7 @@ import i18n from '@/config/i18n'
 import type { Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
+import { CODE_LANGUAGES, getFileKind } from '@/core/file-types'
 import { decodeHash, legacySlug, slugify } from '@/core/slug'
 import { resolveWikiLink, resolveWikiLinks } from '@/core/wiki-link'
 import {
@@ -38,6 +39,10 @@ function main(data: Data) {
   const configData = getDefaultData(data)
   const localize = i18n(configData.language)
   const directoryPage = isLocalDirectoryPage()
+  const fileName = getDirectoryName(window.location.href)
+  const fileKind = directoryPage ? undefined : getFileKind(fileName)
+  // JSON and YAML render as one highlighted code block instead of Markdown.
+  const codeLanguage = fileKind && CODE_LANGUAGES[fileKind]
   const localPage = window.location.protocol === 'file:'
   const configuredRootURL = normalizeFolderRootURL(configData.folderRootPath)
   const useConfiguredRoot = Boolean(
@@ -125,7 +130,8 @@ function main(data: Data) {
   const mdRenderer =
     (target: HTMLElement | Ele) =>
     (code: string = '', options?: MdOptions) => {
-      target.innerHTML = mdRender(code, {
+      const source = codeLanguage ? toCodeFence(code, codeLanguage) : code
+      target.innerHTML = mdRender(source, {
         theme: toTheme(configData.pageTheme),
         plugins: configData.mdPlugins,
         githubCompat: configData.githubCompat,
@@ -139,7 +145,9 @@ function main(data: Data) {
       if (useConfiguredRoot && configuredRootURL) {
         void resolveWikiLinks(ele, configuredRootURL, localize)
       }
-      document.title = ele.querySelector('h1')?.textContent.trim() ?? ''
+      document.title =
+        ele.querySelector('h1')?.textContent.trim() ??
+        (fileKind && fileKind !== 'markdown' ? fileName : '')
       globalEvent.emit(
         'contentRendered',
         target instanceof Ele ? target.ele : target,
@@ -510,6 +518,16 @@ function main(data: Data) {
     events.forEach(e => window.addEventListener(e, stop, { passive: true }))
     setTimeout(stop, 10000)
   }
+}
+
+function toCodeFence(code: string, language: string): string {
+  // The fence must be longer than any backtick run inside the code.
+  const longestRun = Math.max(
+    0,
+    ...Array.from(code.matchAll(/`+/g), match => match[0].length),
+  )
+  const fence = '`'.repeat(Math.max(3, longestRun + 1))
+  return `${fence}${language}\n${code.replace(/\n$/, '')}\n${fence}\n`
 }
 
 function escapeMarkdown(value: string): string {

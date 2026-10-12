@@ -14,6 +14,10 @@ body.md-reader {
   // Automatic equation numbers for some environments.
   // Use parallel counters for HTML and MathML.
   counter-reset: katexEqnNo mmlEqnNo;
+  // The browser's own JSON "Pretty-print" bar, shown above JSON files.
+  > .json-formatter-container {
+    display: none;
+  }
   *:not(.mermaid *) {
     box-sizing: border-box;
   }
@@ -118,14 +122,56 @@ body.md-reader {
         padding: 0 14px 10px;
       }
       .md-reader__folder-root {
+        display: flex;
         flex: 1;
+        align-items: center;
+        gap: 6px;
         min-width: 0;
-        overflow: hidden;
         color: var(--color-text-primary);
         font-weight: 700;
         text-decoration: none;
+      }
+      .md-reader__folder-name {
+        min-width: 0;
+        overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      .md-reader__folder-icon {
+        flex: none;
+        width: 16px;
+        height: 16px;
+        &--chevron {
+          width: 14px;
+          height: 14px;
+          color: var(--color-side);
+          transition: transform 0.15s;
+        }
+        &--folder,
+        &--folder-open {
+          color: #d9a440;
+        }
+        &--folder-open {
+          display: none;
+        }
+        &--markdown {
+          color: var(--color-primary);
+        }
+        &--text {
+          color: var(--color-side);
+        }
+        &--json {
+          color: #2aa198;
+        }
+        &--yaml {
+          color: #8b6fd6;
+        }
+        &--html {
+          color: #e5603a;
+        }
+        &--pdf {
+          color: #d14343;
+        }
       }
       .md-reader__folder-parent {
         flex: none;
@@ -176,8 +222,9 @@ body.md-reader {
         }
         summary,
         a {
-          display: block;
-          overflow: hidden;
+          display: flex;
+          align-items: center;
+          gap: 5px;
           padding: 4px 7px;
           border-radius: 5px;
           color: inherit;
@@ -185,16 +232,26 @@ body.md-reader {
           font-size: 13px;
           line-height: 1.4;
           text-decoration: none;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        }
+        a {
+          // Line file icons up with folder icons, past the folder chevron.
+          padding-left: 7px + 14px + 5px;
         }
         summary {
-          &::marker {
-            color: var(--color-side);
+          list-style: none;
+          &::-webkit-details-marker {
+            display: none;
           }
-          &::after {
-            content: ' /';
-            color: var(--color-side);
+        }
+        details[open] > summary {
+          .md-reader__folder-icon--chevron {
+            transform: rotate(90deg);
+          }
+          .md-reader__folder-icon--folder {
+            display: none;
+          }
+          .md-reader__folder-icon--folder-open {
+            display: block;
           }
         }
         summary:hover,

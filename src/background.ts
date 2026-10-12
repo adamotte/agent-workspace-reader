@@ -1,14 +1,7 @@
 import storage from '@/core/storage'
 import commands from '@/core/commands'
+import { getFileKind, hasKnownExtension } from '@/core/file-types'
 
-const MARKDOWN_EXTENSIONS = new Set([
-  'md',
-  'mdx',
-  'mdc',
-  'mkd',
-  'markdown',
-  'txt',
-])
 const VAULT_INDEX_TTL = 5 * 60 * 1000
 interface NativeFolderEntry {
   name: string
@@ -185,7 +178,7 @@ function parseNativeDirectoryEntries(
       if (isDirectory && (name.startsWith('.') || name === 'node_modules')) {
         continue
       }
-      if (!isDirectory && !isMarkdownFile(name)) continue
+      if (!isDirectory && !getFileKind(name)) continue
       entries.push({ name, url: url.href, isDirectory })
     } catch {
       // Ignore malformed browser-generated rows.
@@ -198,7 +191,7 @@ function splitWikiLinkTarget(target: string) {
   const hashIndex = target.indexOf('#')
   let fileName = hashIndex < 0 ? target : target.slice(0, hashIndex)
   const heading = hashIndex < 0 ? '' : target.slice(hashIndex + 1)
-  if (!isMarkdownFile(fileName)) fileName += '.md'
+  if (!hasKnownExtension(fileName)) fileName += '.md'
   return { fileName, heading }
 }
 
@@ -273,11 +266,6 @@ function decodeName(name: string): string {
   } catch {
     return name
   }
-}
-
-function isMarkdownFile(path: string): boolean {
-  const extension = path.split('.').pop()?.toLowerCase()
-  return MARKDOWN_EXTENSIONS.has(extension)
 }
 
 function normalizeHeading(heading: string): string {

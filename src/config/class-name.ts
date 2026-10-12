@@ -20,6 +20,8 @@ export default {
   FOLDER_LOADING: p`folder-loading`,
   FOLDER_EMPTY: p`folder-empty`,
   FOLDER_FILE_ACTIVE: p`folder-file--active`,
+  FOLDER_ICON: p`folder-icon`,
+  FOLDER_NAME: p`folder-name`,
   WIKI_LINK: p`wiki-link`,
   MD_CONTENT: p`markdown-content`,
   MD_BUTTON: p`btn`,
