@@ -34,8 +34,8 @@ The unpacked extension lands in `extension/`, the
 - Opening a local `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` or `.txt` file
   renders it, with the current folder's files and subfolders listed at the top
   of the side panel and the current file highlighted.
-- The folder list shows each file with a type icon and without its
-  extension:
+- The folder list shows each file with a type icon and, unless "File
+  extensions" is turned on in the popup, without its extension:
   - Markdown and text files, including extensionless `LICENSE`, `README`,
     `CHANGELOG`, `NOTICE`, `AUTHORS`, `COPYING` and `LICENCE`, render as
     Markdown.

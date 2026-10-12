@@ -5,6 +5,7 @@ import { createIcon, type IconName } from '@/core/file-icons'
 import {
   getDisplayName,
   getFileType,
+  getHiddenExtension,
   opensInViewer,
   type FileType,
 } from '@/core/file-types'
@@ -422,7 +423,7 @@ async function renderEntries(
       link.title = entry.name
       link.append(
         folderIcon(entry.type.icon),
-        folderName(getDisplayName(entry.name)),
+        folderName(getDisplayName(entry.name), getHiddenExtension(entry.name)),
       )
       if (entry.type.kind === 'native') {
         // The browser shows these itself; a new tab keeps the folder view.
@@ -505,10 +506,17 @@ function folderIcon(name: IconName): SVGSVGElement {
   return createIcon(name, className.FOLDER_ICON)
 }
 
-function folderName(name: string): HTMLSpanElement {
+// The extension stays in the tree, shown only with the showExtensions option.
+function folderName(name: string, extension: string = ''): HTMLSpanElement {
   const span = document.createElement('span')
   span.className = className.FOLDER_NAME
   span.textContent = name
+  if (extension) {
+    const extensionSpan = document.createElement('span')
+    extensionSpan.className = className.FOLDER_EXTENSION
+    extensionSpan.textContent = extension
+    span.append(extensionSpan)
+  }
   return span
 }
 

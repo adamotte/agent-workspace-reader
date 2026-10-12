@@ -150,6 +150,11 @@ export function getDisplayName(name: string): string {
   return hasKnownExtension(name) ? name.slice(0, name.lastIndexOf('.')) : name
 }
 
+// The extension getDisplayName drops, dot included, or an empty string.
+export function getHiddenExtension(name: string): string {
+  return name.slice(getDisplayName(name).length)
+}
+
 // md-reader shows these files on the folder page: opened directly, the
 // browser downloads some of them (CSV) and shows the others without
 // md-reader (images, XML).

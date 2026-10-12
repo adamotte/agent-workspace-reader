@@ -96,6 +96,9 @@ function main(data: Data) {
     toggleSide() {
       onToggleSide()
     },
+    toggleExtensions(value) {
+      document.body.classList.toggle(className.SHOW_EXTENSIONS, value)
+    },
   }
   chrome.runtime.onMessage.addListener(({ action, data: { key, value } }) => {
     const oldValue = configData[key]
@@ -133,6 +136,10 @@ function main(data: Data) {
   document.body.classList.toggle(
     className.SIDE_COLLAPSED,
     configData.hiddenSide,
+  )
+  document.body.classList.toggle(
+    className.SHOW_EXTENSIONS,
+    configData.showExtensions,
   )
 
   const rawContainer = directoryPage ? null : getRawContainer()

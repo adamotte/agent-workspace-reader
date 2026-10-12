@@ -22,6 +22,7 @@ export default {
   FOLDER_FILE_ACTIVE: p`folder-file--active`,
   FOLDER_ICON: p`folder-icon`,
   FOLDER_NAME: p`folder-name`,
+  FOLDER_EXTENSION: p`folder-extension`,
   TABLE_TOOLBAR: p`table-toolbar`,
   TABLE_WRAP: p`table-wrap`,
   TABLE_NUMBER: p`table-number`,
@@ -41,6 +42,7 @@ export default {
   SIDE_EXPANDED: 'side-expanded',
   SIDE_RESIZING: 'side-resizing',
   SIDE_WIDTH_RESIZING: 'side-width-resizing',
+  SHOW_EXTENSIONS: 'show-extensions',
   MODAL: p`modal`,
   ZOOM_IMAGE: p`zoom-image`,
 }

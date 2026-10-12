@@ -28,6 +28,7 @@ export interface Data {
   mermaidLook?: MermaidLook
   mermaidLayout?: MermaidLayout
   hiddenSide?: boolean
+  showExtensions?: boolean
   sideWidth?: number
   folderPaneRatio?: number
   folderRootPath?: string
@@ -41,6 +42,7 @@ export function getDefaultData(mergeData: Data = {}): Data {
     centered: true,
     githubCompat: true,
     hiddenSide: false,
+    showExtensions: false,
     sideWidth: 260,
     folderPaneRatio: 0.42,
     folderRootPath: '',

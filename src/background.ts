@@ -336,6 +336,7 @@ const actionMap = {
   mermaidLook: 'updateMdPlugins',
   mermaidLayout: 'updateMdPlugins',
   hiddenSide: 'toggleSide',
+  showExtensions: 'toggleExtensions',
   folderRootPath: 'reload',
 }
 

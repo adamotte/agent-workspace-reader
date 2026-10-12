@@ -105,6 +105,18 @@
       </FormField>
     </div>
 
+    <div class="form-item inline">
+      <span class="label-item">{localize('label_show-extensions')}:</span>
+      <FormField align="end">
+        <Switch
+          disabled={!data.enable}
+          bind:checked={data.showExtensions}
+          color="primary"
+          on:change={() => updateConfig('showExtensions', data.showExtensions)}
+        />
+      </FormField>
+    </div>
+
     <div class="form-item">
       <div class="label-item">{localize('label_folder-root')}:</div>
       <input

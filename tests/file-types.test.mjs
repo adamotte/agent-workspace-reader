@@ -1,8 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const { getFileType, getDisplayName, hasKnownExtension, opensInViewer } =
-  await import('../src/core/file-types.ts')
+const {
+  getFileType,
+  getDisplayName,
+  getHiddenExtension,
+  hasKnownExtension,
+  opensInViewer,
+} = await import('../src/core/file-types.ts')
 
 const kind = name => getFileType(name)?.kind
 
@@ -44,6 +49,15 @@ test('drops only extensions the icon conveys', () => {
   assert.equal(getDisplayName('LICENSE'), 'LICENSE')
   assert.equal(getDisplayName('archive.tar.gz'), 'archive.tar.gz')
   assert.equal(hasKnownExtension('README'), false)
+})
+
+test('returns the extension the display name drops', () => {
+  for (const name of ['note-a.md', 'v1.2 notes.MD', 'LICENSE', 'a.tar.gz']) {
+    assert.equal(getDisplayName(name) + getHiddenExtension(name), name)
+  }
+  assert.equal(getHiddenExtension('v1.2 notes.MD'), '.MD')
+  assert.equal(getHiddenExtension('LICENSE'), '')
+  assert.equal(getHiddenExtension('archive.tar.gz'), '')
 })
 
 test('routes files the browser cannot show with md-reader to the viewer', () => {

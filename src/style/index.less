@@ -137,6 +137,11 @@ body.md-reader {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+      // Shown with the showExtensions option; see &.show-extensions.
+      .md-reader__folder-extension {
+        display: none;
+        opacity: 0.6;
+      }
       .md-reader__folder-icon {
         flex: none;
         width: 16px;
@@ -653,6 +658,11 @@ body.md-reader {
       &__btn--side-expand {
         transform: translateX(0);
       }
+    }
+  }
+  &.show-extensions {
+    .md-reader__folder-browser .md-reader__folder-extension {
+      display: inline;
     }
   }
   &.side-expanded {

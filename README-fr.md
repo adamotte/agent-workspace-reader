@@ -9,7 +9,7 @@ Agent Workspace Reader est une extension de navigateur pour lire des espaces de 
 Elle reprend [md-reader](https://github.com/md-reader/md-reader) de Bener et fusionne deux de ses forks : [mdsakalu/md-reader](https://github.com/mdsakalu/md-reader) et [mxgnene01/md-reader](https://github.com/mxgnene01/md-reader).
 
 - **Formats de fichier** : affiche les fichiers locaux `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` et `.txt`, les fichiers JSON et YAML sous forme de code coloré, et les fichiers sans extension `LICENSE`, `README`, `CHANGELOG` ou `NOTICE` en texte.
-- **Navigation dans les dossiers** : le panneau latéral liste le dossier courant avec une icône par type de fichier, trié par nom ou par date de modification. Si un dossier racine est défini, il garde l'arborescence de la racine jusqu'au fichier courant.
+- **Navigation dans les dossiers** : le panneau latéral liste le dossier courant avec une icône par type de fichier, trié par nom ou par date de modification, avec ou sans extensions de fichier. Si un dossier racine est défini, il garde l'arborescence de la racine jusqu'au fichier courant.
 - **Liens wiki** : `[[dossier/note|Alias]]` et `[[note]]` pointent vers le fichier local correspondant.
 - **Plugins de syntaxe** : émojis, exposants/indices, cases à cocher, formules mathématiques, diagrammes Mermaid et Graphviz, sommaire, insertions, abréviations, notes de bas de page, alertes.
 - **Thèmes** : thèmes clairs et sombres, mode de rendu compatible GitHub, coloration syntaxique du code.
