@@ -365,18 +365,23 @@
   .grant-list li {
     margin: 1px 0;
   }
+  .forget-button {
+    margin-top: 6px;
+    padding: 5px 10px;
+    border: 1px solid #ff6767;
+    border-radius: 4px;
+    background: #fff;
+    color: #d64545;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .forget-button:hover:not(:disabled) {
+    background: #ff67671a;
+  }
   .forget-button:disabled {
+    border-color: #24315840;
     color: #24315870;
     cursor: default;
-  }
-  .forget-button {
-    margin-left: 0;
-    padding: 0;
-    border: none;
-    background: none;
-    color: var(--mdc-theme-primary);
-    font: inherit;
-    text-decoration: underline;
-    cursor: pointer;
   }
 </style>
