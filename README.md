@@ -76,26 +76,15 @@ Light, Dark, GitHub Light, GitHub Dark, Dracula, Nord, One Dark, Catppuccin Moch
 
 ## 📦 Installation
 
-Agent Workspace Reader isn't published on extension stores yet. Download `agent-workspace-reader-<date>.zip` from the [latest release](https://github.com/adamotte/agent-workspace-reader/releases/latest) and unzip it into a folder you'll keep, for example `agent-workspace-reader/`: the extension loads from that folder.
-
-To build it from source instead, with Node.js 16 or later and [pnpm](https://pnpm.io):
-
-```bash
-git clone https://github.com/adamotte/agent-workspace-reader.git
-cd agent-workspace-reader
-pnpm install
-pnpm build
-```
-
-The unpacked extension lands in `extension/` and the zip, named after the version in `package.json`, in `dist/`.
-
-Then, in Chrome or Edge:
+Agent Workspace Reader isn't published on extension stores yet. Download `agent-workspace-reader-<date>.zip` from the [latest release](https://github.com/adamotte/agent-workspace-reader/releases/latest) and unzip it into a folder you'll keep, for example `agent-workspace-reader/`: the extension loads from that folder. Then, in Chrome or Edge:
 
 1. Open `chrome://extensions/` (or `edge://extensions/`) and turn on **Developer mode**.
-2. Click **Load unpacked** and select the unzipped folder (or `extension/` if you built it).
+2. Click **Load unpacked** and select the unzipped folder.
 3. Open the extension's **Details** and turn on **Allow access to file URLs**: browsers keep extensions away from local files by default.
 
 To update, unzip the new release over the same folder and click the extension's reload button on `chrome://extensions/`.
+
+You can also [build it from source](#%EF%B8%8F-development).
 
 ## 🔧 Configuration
 
@@ -139,6 +128,17 @@ Change them at `chrome://extensions/shortcuts` (or `edge://extensions/shortcuts`
 - **Markdown Reader**: if the original md-reader extension is installed, disable it so that the two extensions don't both render the same page.
 
 ## 🛠️ Development
+
+Building needs Node.js 16 or later and [pnpm](https://pnpm.io):
+
+```bash
+git clone https://github.com/adamotte/agent-workspace-reader.git
+cd agent-workspace-reader
+pnpm install
+pnpm build
+```
+
+The unpacked extension lands in `extension/`, which you can load with **Load unpacked** as in the [installation](#-installation), and the zip, named after the version in `package.json`, in `dist/`.
 
 ```bash
 pnpm dev                          # build into extension/ and rebuild on change

@@ -76,26 +76,15 @@ Clair, Sombre, GitHub clair, GitHub sombre, Dracula, Nord, One Dark, Catppuccin 
 
 ## 📦 Installation
 
-Agent Workspace Reader n'est pas encore publiée sur les boutiques d'extensions. Téléchargez `agent-workspace-reader-<date>.zip` depuis la [dernière release](https://github.com/adamotte/agent-workspace-reader/releases/latest) et décompressez-le dans un dossier que vous conserverez, par exemple `agent-workspace-reader/` : l'extension se charge depuis ce dossier.
-
-Pour la construire à partir des sources, avec Node.js 16 ou plus récent et [pnpm](https://pnpm.io) :
-
-```bash
-git clone https://github.com/adamotte/agent-workspace-reader.git
-cd agent-workspace-reader
-pnpm install
-pnpm build
-```
-
-L'extension décompressée se trouve dans `extension/` et le zip, nommé d'après la version de `package.json`, dans `dist/`.
-
-Ensuite, dans Chrome ou Edge :
+Agent Workspace Reader n'est pas encore publiée sur les boutiques d'extensions. Téléchargez `agent-workspace-reader-<date>.zip` depuis la [dernière release](https://github.com/adamotte/agent-workspace-reader/releases/latest) et décompressez-le dans un dossier que vous conserverez, par exemple `agent-workspace-reader/` : l'extension se charge depuis ce dossier. Ensuite, dans Chrome ou Edge :
 
 1. Ouvrez `chrome://extensions/` (ou `edge://extensions/`) et activez le **mode développeur**.
-2. Cliquez sur **Charger l'extension non empaquetée** et sélectionnez le dossier décompressé (ou `extension/` si vous l'avez construite).
+2. Cliquez sur **Charger l'extension non empaquetée** et sélectionnez le dossier décompressé.
 3. Ouvrez les **détails** de l'extension et activez **Autoriser l'accès aux URL de fichiers** : par défaut, les navigateurs tiennent les extensions à l'écart des fichiers locaux.
 
 Pour mettre à jour, décompressez la nouvelle release dans le même dossier et cliquez sur le bouton de rechargement de l'extension sur `chrome://extensions/`.
+
+Vous pouvez aussi la [construire à partir des sources](#%EF%B8%8F-développement).
 
 ## 🔧 Configuration
 
@@ -139,6 +128,17 @@ Modifiez-les sur `chrome://extensions/shortcuts` (ou `edge://extensions/shortcut
 - **Markdown Reader** : si l'extension md-reader d'origine est installée, désactivez-la pour que les deux extensions n'affichent pas la même page.
 
 ## 🛠️ Développement
+
+La construction demande Node.js 16 ou plus récent et [pnpm](https://pnpm.io) :
+
+```bash
+git clone https://github.com/adamotte/agent-workspace-reader.git
+cd agent-workspace-reader
+pnpm install
+pnpm build
+```
+
+L'extension décompressée se trouve dans `extension/`, à charger avec **Charger l'extension non empaquetée** comme à l'[installation](#-installation), et le zip, nommé d'après la version de `package.json`, dans `dist/`.
 
 ```bash
 pnpm dev                          # construit dans extension/ et reconstruit à chaque modification
