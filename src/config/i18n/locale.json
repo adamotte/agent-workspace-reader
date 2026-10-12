@@ -89,7 +89,7 @@
     "TaskLists": "TaskList",
     "TOC": "TOC",
     "Alert": "Alert",
-    "warning_message": "Open the details page of extension \"md-reader\" and active \"allow access to file URLs\"."
+    "warning_message": "Open the details page of extension \"Agent Workspace Reader\" and turn on \"Allow access to file URLs\"."
   },
   "fr": {
     "label_enable": "Activer",
@@ -166,6 +166,6 @@
     "TaskLists": "Liste de tâches",
     "TOC": "Sommaire",
     "Alert": "Alerte",
-    "warning_message": "Ouvrez la page de détails de l'extension « md-reader » et activez « Autoriser l'accès aux URL de fichiers »."
+    "warning_message": "Ouvrez la page de détails de l'extension « Agent Workspace Reader » et activez « Autoriser l'accès aux URL de fichiers »."
   }
 }

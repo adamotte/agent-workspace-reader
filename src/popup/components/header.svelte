@@ -5,7 +5,7 @@
 
 <h1>
   <Icon class="icon-logo" svg={logoIcon} />
-  MD-READER
+  Agent Workspace Reader
 </h1>
 
 <style>
