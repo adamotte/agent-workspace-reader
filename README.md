@@ -2,7 +2,7 @@
 
 <img alt="Markdown Reader Logo" src="https://raw.githubusercontent.com/md-reader/md-reader/main/src//images/logo-stroke.svg" align="right" width="120">
 
-English | [中文](./README-cn.md) | [한국어](./README-ko.md)
+English | [Français](./README-fr.md)
 
 https://md-reader.github.io
 
@@ -12,7 +12,7 @@ Markdown Reader is a powerful browser extension that enables you to conveniently
 
 > This repository contains the old source code of Markdown Reader(2.x version) and is no longer maintained.
 > It is used only to collect issues about Markdown Reader.
-> 
+>
 > Please download the 3.x version from the [website](https://md-reader.github.io).
 
 - **Document Formats**: Preview links in `file://`, `http://`, `https://` and files with `.md`, `.mkd`, `.mdx`, `.markdown` extensions:
