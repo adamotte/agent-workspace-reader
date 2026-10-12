@@ -1,0 +1,24 @@
+# atlas: maintenance agent for billing-service
+name: atlas
+model: claude-opus-5-5
+workspace: ~/agents/atlas-workspace
+repository: ~/code/billing-service
+
+skills:
+  - dependency-audit
+  - write-report
+
+permissions:
+  allow:
+    - read: '**'
+    - bash: ['pnpm *', 'nvm use *', 'git switch -c *']
+  deny:
+    - bash: ['git push origin main']
+
+outputs:
+  reports: reports/{date}-{slug}.md
+  plans: plans/{date}-{slug}.md
+  runs: runs/{run_id}/
+
+schedule:
+  weekly_digest: '0 8 * * MON'

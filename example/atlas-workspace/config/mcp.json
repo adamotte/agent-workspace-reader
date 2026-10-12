@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "~/code/billing-service"
+      ]
+    },
+    "issues": {
+      "type": "http",
+      "url": "http://localhost:7410/mcp"
+    }
+  }
+}

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="280" viewBox="0 0 620 280" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="620" height="280" fill="#ffffff"/>
+  <text x="24" y="32" font-size="16" font-weight="600" fill="#111827">Estimated effort per package</text>
+  <text x="118" y="78" text-anchor="end" font-size="14" fill="#374151">express</text><rect x="130" y="56" width="416" height="32" rx="4" fill="#dc2626"/><text x="554" y="78" font-size="13" fill="#374151">16 h</text><text x="118" y="130" text-anchor="end" font-size="14" fill="#374151">request</text><rect x="130" y="108" width="208" height="32" rx="4" fill="#d97706"/><text x="346" y="130" font-size="13" fill="#374151">8 h</text><text x="118" y="182" text-anchor="end" font-size="14" fill="#374151">bcrypt</text><rect x="130" y="160" width="52" height="32" rx="4" fill="#2563eb"/><text x="190" y="182" font-size="13" fill="#374151">2 h</text><text x="118" y="234" text-anchor="end" font-size="14" fill="#374151">node-sass</text><rect x="130" y="212" width="52" height="32" rx="4" fill="#2563eb"/><text x="190" y="234" font-size="13" fill="#374151">2 h</text>
+</svg>
