@@ -1,5 +1,6 @@
 import {
   getAncestorFolderURLs,
+  getRelativeFolderSegments,
   getRelativeSegments,
   pickRoot,
 } from '@/core/file-path'
@@ -194,18 +195,7 @@ export async function resolveFileHandle(
   )
   if (!rootURL) throw new FolderMismatchError(fileURL)
   options.onPick?.(rootURL)
-  let picked: FileSystemDirectoryHandle
-  try {
-    picked = await window.showDirectoryPicker({
-      id: 'md-reader-root',
-      mode: 'readwrite',
-    })
-  } catch (e) {
-    if (e instanceof DOMException && e.name === 'AbortError') {
-      throw new PickerCancelledError()
-    }
-    throw e
-  }
+  const picked = await pickDirectory()
   // Which folder above the file was picked: the one under which the file's
   // relative path leads to the same text. Closest folders first, so that a
   // same-named file higher up can't pass for it.
@@ -232,4 +222,88 @@ export async function resolveFileHandle(
 // it. Line endings also don't tell two readings of one file apart.
 function normalize(text: string): string {
   return text.replace(/^﻿/, '').replace(/\r\n?/g, '\n')
+}
+
+export interface FolderEntryName {
+  name: string
+  isDirectory: boolean
+}
+
+// How many of the folder's entries a picked folder must show to pass for it
+const CHECKED_ENTRIES = 8
+
+async function pickDirectory(): Promise<FileSystemDirectoryHandle> {
+  try {
+    return await window.showDirectoryPicker({
+      id: 'md-reader-root',
+      mode: 'readwrite',
+    })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      throw new PickerCancelledError()
+    }
+    throw e
+  }
+}
+
+async function walkToDirectory(
+  root: FileSystemDirectoryHandle,
+  segments: string[],
+): Promise<FileSystemDirectoryHandle> {
+  let directory = root
+  for (const segment of segments) {
+    directory = await directory.getDirectoryHandle(segment)
+  }
+  return directory
+}
+
+// Whether the handle holds the entries the browser lists for the folder
+async function holdsEntries(
+  directory: FileSystemDirectoryHandle,
+  entries: FolderEntryName[],
+  expectedName: string,
+): Promise<boolean> {
+  if (!entries.length) return directory.name === expectedName
+  for (const entry of entries.slice(0, CHECKED_ENTRIES)) {
+    try {
+      if (entry.isDirectory) {
+        await directory.getDirectoryHandle(entry.name)
+      } else {
+        await directory.getFileHandle(entry.name)
+      }
+    } catch {
+      return false
+    }
+  }
+  return true
+}
+
+// Grants a folder from its own page, before any file is edited: the user
+// picks the folder, or one above it, and the handle is kept for its URL.
+// Throws PickerCancelledError or FolderMismatchError.
+export async function grantFolder(
+  folderURL: string,
+  entries: FolderEntryName[],
+): Promise<string> {
+  const picked = await pickDirectory()
+  const expectedName = decodeURIComponent(
+    folderURL.replace(/\/$/, '').split('/').pop() || '',
+  )
+  for (const ancestorURL of getAncestorFolderURLs(folderURL)) {
+    const segments = getRelativeFolderSegments(folderURL, ancestorURL)
+    if (!segments) continue
+    let directory: FileSystemDirectoryHandle
+    try {
+      directory = await walkToDirectory(picked, segments)
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'NotFoundError') continue
+      if (e instanceof DOMException && e.name === 'TypeMismatchError') continue
+      throw e
+    }
+    if (await holdsEntries(directory, entries, expectedName)) {
+      await putRoot(ancestorURL, picked)
+      return ancestorURL
+    }
+  }
+  throw new FolderMismatchError(folderURL)
 }

@@ -915,9 +915,9 @@ body.md-reader {
     flex-wrap: wrap;
     align-items: center;
     gap: 8px 16px;
-    // Clear of the floating buttons on the right: the raw toggle at 16px and
-    // the edit button at 56px, 32px wide.
-    margin: 16px 100px 0 16px;
+    // Clear of the floating buttons: the side toggle on the left, the raw
+    // toggle at 16px and the edit button at 56px on the right, 32px wide.
+    margin: 16px 100px 0 60px;
     padding: 10px 16px;
     border: 1px solid var(--color-primary);
     border-radius: 8px;
@@ -1030,7 +1030,7 @@ body.md-reader {
       align-items: flex-start;
       .md-reader__editor-banner {
         flex: 0 0 auto;
-        width: calc(100% - 116px);
+        width: calc(100% - 160px);
       }
       .md-reader__editor {
         flex: 1 1 50%;

@@ -44,6 +44,19 @@ function decodePath(url: URL): string {
   }
 }
 
+// The decoded path segments from an ancestor folder down to a folder: none
+// for the folder itself, undefined when it isn't under the ancestor.
+export function getRelativeFolderSegments(
+  folderURL: string,
+  ancestorURL: string,
+): string[] | undefined {
+  if (!folderURL.endsWith('/')) return undefined
+  const trimmed = folderURL.slice(0, -1)
+  if (trimmed === ancestorURL.replace(/\/$/, '')) return []
+  if (trimmed.endsWith('/')) return undefined
+  return getRelativeSegments(trimmed, ancestorURL)
+}
+
 // The folders above the file, from its own folder up to the drive or root
 // folder: the ones a user may pick to grant it.
 export function getAncestorFolderURLs(fileURL: string): string[] {
@@ -56,7 +69,8 @@ export function getAncestorFolderURLs(fileURL: string): string[] {
   url.search = ''
   url.hash = ''
   const folders: string[] = []
-  let folder = new URL('./', url).href
+  // A folder's own URL first when given one
+  let folder = url.pathname.endsWith('/') ? url.href : new URL('./', url).href
   while (true) {
     folders.push(folder)
     const parent = new URL('../', folder).href

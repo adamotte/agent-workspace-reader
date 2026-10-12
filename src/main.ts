@@ -32,6 +32,7 @@ import { createEditor, type Editor } from '@/core/editor'
 import {
   FolderMismatchError,
   PickerCancelledError,
+  grantFolder,
   isFileAccessSupported,
   readFile,
   resolveFileHandle,
@@ -46,6 +47,7 @@ import {
 import {
   fetchLocalText,
   getDirectoryName,
+  parseDirectoryEntries,
   isSameLocalURL,
   isLocalDirectoryPage,
   normalizeFolderRootURL,
@@ -578,6 +580,15 @@ function main(data: Data) {
     updateAnchorPosition()
     reveal()
   }
+  // Opened from the popup's "Allow saving files" button; see grantFromPage.
+  if (directoryPage && !viewedFileURL) {
+    const pageURL = new URL(window.location.href)
+    if (pageURL.searchParams.get('grant') === 'write') {
+      pageURL.searchParams.delete('grant')
+      history.replaceState(history.state, '', pageURL.href)
+      showGrantBanner(pageFolderURL)
+    }
+  }
 
   if (directoryPage) {
     window.addEventListener('popstate', (e: PopStateEvent) => {
@@ -797,10 +808,10 @@ function main(data: Data) {
         ].filter(Boolean),
       ),
     )
-    let handle: FileSystemFileHandle
+    let resolved: { handle: FileSystemFileHandle; rootURL: string }
     let onDisk: { text: string; lastModified: number }
     try {
-      ;({ handle } = await resolveFileHandle({
+      resolved = await resolveFileHandle({
         fileURL: url,
         candidateRootURLs,
         currentText: text,
@@ -810,15 +821,17 @@ function main(data: Data) {
               path: displayPath(rootURL),
             }),
           ),
-      }))
-      onDisk = await readFile(handle)
+      })
+      onDisk = await readFile(resolved.handle)
     } catch (e) {
       showEditError(e)
       return
     }
+    const { handle } = resolved
     // Another file opened meanwhile
     if (url !== fileURL || session) return
     hideBanner()
+    rememberWriteRoot(resolved.rootURL)
     const baseText = toEditorText(onDisk.text)
     const current: EditSession = {
       editor: null,
@@ -1052,6 +1065,58 @@ function main(data: Data) {
         'error',
       )
     }
+  }
+
+  // The folder page's way to grant saving before any file is edited
+  function showGrantBanner(folderURL: string) {
+    if (!isFileAccessSupported()) {
+      showBanner(localize('edit_unsupported'), 'error')
+      return
+    }
+    showBanner(
+      format(localize('edit_grant_folder'), { path: displayPath(folderURL) }),
+      'info',
+      [
+        {
+          label: localize('edit_grant_pick'),
+          run: () => void grantFromPage(folderURL),
+        },
+      ],
+    )
+  }
+
+  async function grantFromPage(folderURL: string) {
+    try {
+      // A picked folder is only kept when it shows what the browser lists.
+      // The listing reads fast enough for the click to still open the picker.
+      const html = await fetchLocalText(folderURL, localize).catch(() => '')
+      const entries = html
+        ? parseDirectoryEntries(html, folderURL).map(entry => ({
+            name: entry.name,
+            isDirectory: entry.isDirectory,
+          }))
+        : []
+      const rootURL = await grantFolder(folderURL, entries)
+      rememberWriteRoot(rootURL)
+      showBanner(
+        format(localize('edit_granted'), { path: displayPath(rootURL) }),
+      )
+    } catch (e) {
+      if (e instanceof FolderMismatchError) {
+        showGrantBanner(folderURL)
+        return
+      }
+      showEditError(e)
+    }
+  }
+
+  function rememberWriteRoot(rootURL: string) {
+    const roots = (configData.writeRoots ?? []).filter(
+      root => root !== rootURL && !root.startsWith(rootURL),
+    )
+    if (roots.some(root => rootURL.startsWith(root))) return
+    configData.writeRoots = [...roots, rootURL]
+    void storage.set('writeRoots', configData.writeRoots)
   }
 
   function showBanner(

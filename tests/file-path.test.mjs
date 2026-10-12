@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 const {
   getAncestorFolderURLs,
+  getRelativeFolderSegments,
   getRelativeSegments,
   pickRoot,
   detectEOL,
@@ -77,4 +78,27 @@ test('lists the folders above a file, closest first', () => {
     ['file:///C:/WORKSPACE/notes/', 'file:///C:/WORKSPACE/', 'file:///C:/'],
   )
   assert.deepEqual(getAncestorFolderURLs('file:///a.md'), ['file:///'])
+})
+
+test('lists a folder itself first among its ancestors', () => {
+  assert.deepEqual(getAncestorFolderURLs('file:///C:/WORKSPACE/notes/'), [
+    'file:///C:/WORKSPACE/notes/',
+    'file:///C:/WORKSPACE/',
+    'file:///C:/',
+  ])
+})
+
+test('walks from an ancestor down to a folder', () => {
+  assert.deepEqual(
+    getRelativeFolderSegments('file:///C:/WORKSPACE/notes/', 'file:///C:/'),
+    ['WORKSPACE', 'notes'],
+  )
+  assert.deepEqual(
+    getRelativeFolderSegments('file:///C:/WORKSPACE/', 'file:///C:/WORKSPACE/'),
+    [],
+  )
+  assert.equal(
+    getRelativeFolderSegments('file:///D:/x/', 'file:///C:/WORKSPACE/'),
+    undefined,
+  )
 })

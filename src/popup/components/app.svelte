@@ -11,6 +11,7 @@
   import PAGE_THEMES from '@/config/page-themes'
   import { MERMAID_LAYOUTS, MERMAID_LOOKS } from '@/config/mermaid-options'
   import { getDefaultData, type Data } from '@/core/data'
+  import { normalizeFolderRootURL } from '@/core/folder'
   import i18n from '@/config/i18n'
 
   let localize = i18n()
@@ -46,6 +47,29 @@
     data.folderRootPath = data.folderRootPath?.trim() || ''
     updateConfig('folderRootPath', data.folderRootPath)
   }
+
+  // Opens the root folder, where the page asks the browser's folder dialog:
+  // the popup can't grant on the pages' behalf.
+  function grantWrite() {
+    const rootURL = normalizeFolderRootURL(data.folderRootPath)
+    if (!rootURL) return
+    chrome.tabs.create({ url: `${rootURL}?grant=write` })
+  }
+
+  function displayPath(url: string): string {
+    try {
+      const path = decodeURIComponent(new URL(url).pathname).replace(/\/$/, '')
+      return /^\/[a-z]:/i.test(path) ? path.slice(1).replace(/\//g, '\\') : path
+    } catch {
+      return url
+    }
+  }
+
+  $: writeRoots = data.writeRoots ?? []
+  $: grantStatus = localize('grant_status').replace(
+    '{paths}',
+    writeRoots.map(displayPath).join(', '),
+  )
 </script>
 
 <main>
@@ -128,6 +152,18 @@
         on:keydown={event => event.key === 'Enter' && updateFolderRootPath()}
       />
       <div class="help-item">{localize('help_folder-root')}</div>
+      <button
+        class="grant-button"
+        type="button"
+        disabled={!data.enable || !normalizeFolderRootURL(data.folderRootPath)}
+        on:click={grantWrite}
+      >
+        {localize('label_grant-write')}
+      </button>
+      <div class="help-item">{localize('help_grant-write')}</div>
+      {#if writeRoots.length}
+        <div class="help-item grant-status">{grantStatus}</div>
+      {/if}
     </div>
 
     <div class="form-item">
@@ -259,5 +295,28 @@
     color: #24315899;
     font-size: 11px;
     line-height: 1.4;
+  }
+  .grant-button {
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--mdc-theme-primary);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--mdc-theme-primary);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .grant-button:hover:not(:disabled) {
+    background: #607cd21a;
+  }
+  .grant-button:disabled {
+    border-color: #24315840;
+    color: #24315870;
+    cursor: default;
+  }
+  .grant-status {
+    color: #243158e3;
+    word-break: break-all;
   }
 </style>

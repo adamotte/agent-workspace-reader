@@ -36,6 +36,9 @@ export interface Data {
   folderSortOrder?: FolderSortOrder
   // The rendered preview beside the editor in edit mode
   editorPreview?: boolean
+  // The folders the user granted writing to, for the popup to show; the
+  // handles themselves live in IndexedDB on the file: origin
+  writeRoots?: string[]
 }
 
 export function getDefaultData(mergeData: Data = {}): Data {
@@ -52,6 +55,7 @@ export function getDefaultData(mergeData: Data = {}): Data {
     folderRootPath: '',
     folderSortOrder: 'name-asc',
     editorPreview: true,
+    writeRoots: [],
     language: i18n().locale,
     mdPlugins: [...MD_PLUGINS],
     pageTheme: PAGE_THEMES[0],
