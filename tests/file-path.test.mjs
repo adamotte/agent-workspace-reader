@@ -1,8 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const { getRelativeSegments, pickRoot, detectEOL, applyEOL, hasChangedOnDisk } =
-  await import('../src/core/file-path.ts')
+const {
+  getAncestorFolderURLs,
+  getRelativeSegments,
+  pickRoot,
+  detectEOL,
+  applyEOL,
+  hasChangedOnDisk,
+} = await import('../src/core/file-path.ts')
 
 test('splits the decoded path of a file under its root', () => {
   assert.deepEqual(
@@ -63,4 +69,12 @@ test('reports a change on disk from the text, not the line endings', () => {
   assert.equal(hasChangedOnDisk('a\nb', 'a\r\nb'), false)
   assert.equal(hasChangedOnDisk('a\nb', 'a\nb\n'), true)
   assert.equal(hasChangedOnDisk('a', 'b'), true)
+})
+
+test('lists the folders above a file, closest first', () => {
+  assert.deepEqual(
+    getAncestorFolderURLs('file:///C:/WORKSPACE/notes/plan.md?view=x#h'),
+    ['file:///C:/WORKSPACE/notes/', 'file:///C:/WORKSPACE/', 'file:///C:/'],
+  )
+  assert.deepEqual(getAncestorFolderURLs('file:///a.md'), ['file:///'])
 })

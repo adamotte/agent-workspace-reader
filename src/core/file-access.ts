@@ -1,4 +1,8 @@
-import { getRelativeSegments, pickRoot } from '@/core/file-path'
+import {
+  getAncestorFolderURLs,
+  getRelativeSegments,
+  pickRoot,
+} from '@/core/file-path'
 
 // Writing a local file from a file: page goes through the File System Access
 // API: the user grants a folder once, and the files under it can be saved.
@@ -152,8 +156,8 @@ export async function writeFile(
 
 export interface ResolveOptions {
   fileURL: string
-  // The folders the picker may stand for, most specific first: the user is
-  // asked to pick the first one that holds the file.
+  // The folder the user is asked to pick, in order of preference: the first
+  // one that holds the file. Any folder above the file is accepted though.
   candidateRootURLs: string[]
   // The file's text as read through its URL: a picked folder is only kept
   // when the same path under it reads the same, as handles have no path.
@@ -202,22 +206,26 @@ export async function resolveFileHandle(
     }
     throw e
   }
-  const segments = getRelativeSegments(fileURL, rootURL)
-  let handle: FileSystemFileHandle
-  try {
-    handle = await walkToFile(picked, segments)
-  } catch (e) {
-    if (e instanceof DOMException && e.name === 'NotFoundError') {
-      throw new FolderMismatchError(rootURL)
+  // Which folder above the file was picked: the one under which the file's
+  // relative path leads to the same text. Closest folders first, so that a
+  // same-named file higher up can't pass for it.
+  for (const folderURL of getAncestorFolderURLs(fileURL)) {
+    const segments = getRelativeSegments(fileURL, folderURL)
+    if (!segments) continue
+    let handle: FileSystemFileHandle
+    try {
+      handle = await walkToFile(picked, segments)
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'NotFoundError') continue
+      if (e instanceof DOMException && e.name === 'TypeMismatchError') continue
+      throw e
     }
-    throw e
+    const { text } = await readFile(handle)
+    if (normalize(text) !== normalize(currentText)) continue
+    await putRoot(folderURL, picked)
+    return { handle, rootURL: folderURL }
   }
-  const { text } = await readFile(handle)
-  if (normalize(text) !== normalize(currentText)) {
-    throw new FolderMismatchError(rootURL)
-  }
-  await putRoot(rootURL, picked)
-  return { handle, rootURL }
+  throw new FolderMismatchError(rootURL)
 }
 
 // The page reads files through fetch, which strips a BOM; File.text() keeps

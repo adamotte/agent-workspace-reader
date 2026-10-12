@@ -44,6 +44,28 @@ function decodePath(url: URL): string {
   }
 }
 
+// The folders above the file, from its own folder up to the drive or root
+// folder: the ones a user may pick to grant it.
+export function getAncestorFolderURLs(fileURL: string): string[] {
+  let url: URL
+  try {
+    url = new URL(fileURL)
+  } catch {
+    return []
+  }
+  url.search = ''
+  url.hash = ''
+  const folders: string[] = []
+  let folder = new URL('./', url).href
+  while (true) {
+    folders.push(folder)
+    const parent = new URL('../', folder).href
+    if (parent === folder) break
+    folder = parent
+  }
+  return folders
+}
+
 // The most specific of the roots that hold the file, or undefined.
 export function pickRoot(
   fileURL: string,
