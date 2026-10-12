@@ -94,10 +94,10 @@ Click the extension icon to open its settings:
 
 1. **Local folder root**: set it to your agent's workspace, for example `C:\Users\me\agents\atlas` or `/Users/me/agents/atlas`. The side panel then keeps the tree from that root, and bare wiki links such as `[[decisions]]` are looked up under it.
 2. **Theme**: pick one of the 15 themes, or Auto.
-3. **Auto Refresh**: turn it on to follow a file while an agent writes it.
+3. **Auto Refresh**, on by default: the page follows a file while an agent writes it.
 4. **GitHub-compatible**: turn it off for the syntax GitHub doesn't support and to choose the Mermaid look and layout.
 5. **Plugins**: turn individual syntax plugins on or off.
-6. **File extensions**: show them in the tree, next to the type icons.
+6. **File extensions**, shown by default in the tree next to the type icons: turn them off for bare names.
 
 Then open a file or a folder, such as `file:///C:/Users/me/agents/atlas/AGENTS.md`, or drag a file into the browser.
 

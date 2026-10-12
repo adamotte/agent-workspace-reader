@@ -105,7 +105,7 @@ export function getDirectoryName(url: string): string {
 export function parseDirectoryEntries(
   html: string,
   directoryURL: string,
-  sortOrder: FolderSortOrder = 'name-desc',
+  sortOrder: FolderSortOrder = 'name-asc',
 ): FolderEntry[] {
   const base = new URL(directoryURL)
   const basePath = base.pathname.endsWith('/')
@@ -217,7 +217,7 @@ export function renderFolderBrowser({
   currentURL,
   initialHTML,
   showParentLink = true,
-  sortOrder = 'name-desc',
+  sortOrder = 'name-asc',
   onSortOrderChange,
   localize = i18n(),
 }: FolderBrowserOptions): FolderBrowser {
@@ -336,7 +336,7 @@ async function renderEntries(
   list: HTMLUListElement,
   entries: FolderEntry[],
   state: TreeState,
-  sortOrder: FolderSortOrder = 'name-desc',
+  sortOrder: FolderSortOrder = 'name-asc',
   localize: Localize = i18n(),
 ): Promise<void> {
   for (const entry of entries) {
@@ -454,7 +454,7 @@ function compareFolderEntries(
 function normalizeFolderSortOrder(value: string): FolderSortOrder {
   return FOLDER_SORT_ORDERS.includes(value as FolderSortOrder)
     ? (value as FolderSortOrder)
-    : 'name-desc'
+    : 'name-asc'
 }
 
 function updateSortControlTitle(

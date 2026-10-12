@@ -94,10 +94,10 @@ Cliquez sur l'icône de l'extension pour ouvrir ses réglages :
 
 1. **Dossier local racine** : indiquez l'espace de travail de votre agent, par exemple `C:\Users\moi\agents\atlas` ou `/Users/moi/agents/atlas`. Le panneau latéral garde alors l'arborescence depuis cette racine, et les liens wiki courts comme `[[decisions]]` y sont recherchés.
 2. **Thème** : choisissez l'un des 15 thèmes, ou Auto.
-3. **Actualisation auto** : activez-la pour suivre un fichier pendant qu'un agent l'écrit.
+3. **Actualisation auto**, active par défaut : la page suit un fichier pendant qu'un agent l'écrit.
 4. **Compatible GitHub** : désactivez-le pour la syntaxe que GitHub ne prend pas en charge et pour choisir le style et la disposition des diagrammes Mermaid.
 5. **Plugins** : activez ou désactivez chaque plugin de syntaxe.
-6. **Extensions de fichier** : affichez-les dans l'arborescence, à côté des icônes de type.
+6. **Extensions de fichier**, affichées par défaut dans l'arborescence à côté des icônes de type : désactivez-les pour n'avoir que les noms.
 
 Ouvrez ensuite un fichier ou un dossier, par exemple `file:///C:/Users/moi/agents/atlas/AGENTS.md`, ou faites glisser un fichier dans le navigateur.
 
