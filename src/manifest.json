@@ -15,8 +15,8 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["css/*", "fonts/*", "images/*"],
-      "matches": ["<all_urls>"]
+      "resources": ["fonts/*", "images/logo-stroke.svg"],
+      "matches": ["file:///*"]
     }
   ],
   "background": {
@@ -26,21 +26,13 @@
     "default_title": "__MSG_ext_name__",
     "default_popup": "popup.html"
   },
-  "permissions": ["activeTab", "storage"],
-  "host_permissions": ["*://*/*", "file:///*"],
+  "permissions": ["storage"],
+  "host_permissions": ["file:///*"],
   "content_scripts": [
     {
       "js": ["js/content.js"],
       "css": ["css/content.css"],
       "matches": [
-        "*://*/*.md",
-        "*://*/*.mdx",
-        "*://*/*.mkd",
-        "*://*/*.markdown",
-        "*://*/*.MD",
-        "*://*/*.MDX",
-        "*://*/*.MKD",
-        "*://*/*.MARKDOWN",
         "file://*/*.md",
         "file://*/*.mdx",
         "file://*/*.mkd",
@@ -49,14 +41,6 @@
         "file://*/*.MDX",
         "file://*/*.MKD",
         "file://*/*.MARKDOWN",
-        "*://*/*.md?*",
-        "*://*/*.mdx?*",
-        "*://*/*.mkd?*",
-        "*://*/*.markdown?*",
-        "*://*/*.MD?*",
-        "*://*/*.MDX?*",
-        "*://*/*.MKD?*",
-        "*://*/*.MARKDOWN?*",
         "file://*/*.md?*",
         "file://*/*.mdx?*",
         "file://*/*.mkd?*",

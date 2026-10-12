@@ -307,6 +307,11 @@ async function fetchData(url?: string) {
     console.error(error)
     return error.message
   }
+  if (new URL(url).protocol !== 'file:') {
+    const error = new Error('Fetch error: only local files are read.')
+    console.error(error)
+    return error.message
+  }
 
   return fetch(url)
     .then(res => res.text())
@@ -350,7 +355,3 @@ function updatePage(key: keyof typeof actionMap, value?: any) {
     })
   })
 }
-
-chrome.runtime.setUninstallURL(
-  'https://github.com/orgs/md-reader/discussions/51',
-)
