@@ -307,3 +307,13 @@ export async function grantFolder(
   }
   throw new FolderMismatchError(folderURL)
 }
+
+// Forgets every granted folder. The browser's own permission is revoked from
+// its site settings; without the handle, the extension can't use it anyway.
+export async function forgetRoots(): Promise<void> {
+  try {
+    await withStore('readwrite', store => store.clear())
+  } catch {
+    // Nothing stored.
+  }
+}

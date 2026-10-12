@@ -56,6 +56,13 @@
     chrome.tabs.create({ url: `${rootURL}?grant=write` })
   }
 
+  function forgetWrite() {
+    const rootURL = normalizeFolderRootURL(data.folderRootPath)
+    data.writeRoots = []
+    updateConfig('writeRoots', [])
+    if (rootURL) chrome.tabs.create({ url: `${rootURL}?grant=forget` })
+  }
+
   function displayPath(url: string): string {
     try {
       const path = decodeURIComponent(new URL(url).pathname).replace(/\/$/, '')
@@ -161,9 +168,18 @@
         {localize('label_grant-write')}
       </button>
       <div class="help-item">{localize('help_grant-write')}</div>
-      {#if writeRoots.length}
-        <div class="help-item grant-status">{grantStatus}</div>
-      {/if}
+      <div class="help-item grant-status">
+        {#if writeRoots.length}{grantStatus}{/if}
+        <button
+          class="forget-button"
+          type="button"
+          disabled={!data.enable || !normalizeFolderRootURL(data.folderRootPath)}
+          title={localize('title_forget-write')}
+          on:click={forgetWrite}
+        >
+          {localize('label_forget-write')}
+        </button>
+      </div>
     </div>
 
     <div class="form-item">
@@ -318,5 +334,19 @@
   .grant-status {
     color: #243158e3;
     word-break: break-all;
+  }
+  .forget-button:disabled {
+    color: #24315870;
+    cursor: default;
+  }
+  .forget-button {
+    margin-left: 6px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--mdc-theme-primary);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
   }
 </style>

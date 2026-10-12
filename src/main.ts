@@ -32,6 +32,7 @@ import { createEditor, type Editor } from '@/core/editor'
 import {
   FolderMismatchError,
   PickerCancelledError,
+  forgetRoots,
   grantFolder,
   isFileAccessSupported,
   readFile,
@@ -583,10 +584,19 @@ function main(data: Data) {
   // Opened from the popup's "Allow saving files" button; see grantFromPage.
   if (directoryPage && !viewedFileURL) {
     const pageURL = new URL(window.location.href)
-    if (pageURL.searchParams.get('grant') === 'write') {
+    const grant = pageURL.searchParams.get('grant')
+    if (grant === 'write' || grant === 'forget') {
       pageURL.searchParams.delete('grant')
       history.replaceState(history.state, '', pageURL.href)
-      showGrantBanner(pageFolderURL)
+      if (grant === 'write') {
+        showGrantBanner(pageFolderURL)
+      } else {
+        void forgetRoots().then(() => {
+          configData.writeRoots = []
+          void storage.set('writeRoots', [])
+          showBanner(localize('edit_forgotten'))
+        })
+      }
     }
   }
 
