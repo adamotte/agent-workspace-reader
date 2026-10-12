@@ -75,7 +75,9 @@ Light, Dark, GitHub Light, GitHub Dark, Dracula, Nord, One Dark, Catppuccin Moch
 
 ## 📦 Installation
 
-Agent Workspace Reader isn't published on extension stores yet: build it from source, with Node.js 16 or later and [pnpm](https://pnpm.io).
+Agent Workspace Reader isn't published on extension stores yet. Download `agent-workspace-reader-<version>.zip` from the [latest release](https://github.com/adamotte/agent-workspace-reader/releases/latest) and unzip it into a folder you'll keep, for example `agent-workspace-reader/`: the extension loads from that folder.
+
+To build it from source instead, with Node.js 16 or later and [pnpm](https://pnpm.io):
 
 ```bash
 git clone https://github.com/adamotte/agent-workspace-reader.git
@@ -84,11 +86,15 @@ pnpm install
 pnpm build
 ```
 
-The unpacked extension lands in `extension/` and an `agent-workspace-reader-<version>.zip` package in `dist/`. Then, in Chrome or Edge:
+The unpacked extension lands in `extension/` and the same zip in `dist/`.
+
+Then, in Chrome or Edge:
 
 1. Open `chrome://extensions/` (or `edge://extensions/`) and turn on **Developer mode**.
-2. Click **Load unpacked** and select the `extension/` folder.
+2. Click **Load unpacked** and select the unzipped folder (or `extension/` if you built it).
 3. Open the extension's **Details** and turn on **Allow access to file URLs**: browsers keep extensions away from local files by default.
+
+To update, unzip the new release over the same folder and click the extension's reload button on `chrome://extensions/`.
 
 ## 🔧 Configuration
 
@@ -140,6 +146,8 @@ node --test "tests/*.test.mjs"    # unit tests
 ```
 
 The unit tests import the TypeScript sources directly, which needs Node.js 22.18 or later.
+
+The [Build workflow](.github/workflows/build.yml) runs the tests and the build on every push and pull request, and keeps the zip as a workflow artifact. When a commit on `main` carries a version from `package.json` that has no release yet, it publishes a `v<version>` release with the zip attached: bumping the version is what releases.
 
 ## 🙏 Acknowledgements
 

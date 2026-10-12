@@ -75,7 +75,9 @@ Clair, Sombre, GitHub clair, GitHub sombre, Dracula, Nord, One Dark, Catppuccin 
 
 ## 📦 Installation
 
-Agent Workspace Reader n'est pas encore publiée sur les boutiques d'extensions : construisez-la à partir des sources, avec Node.js 16 ou plus récent et [pnpm](https://pnpm.io).
+Agent Workspace Reader n'est pas encore publiée sur les boutiques d'extensions. Téléchargez `agent-workspace-reader-<version>.zip` depuis la [dernière release](https://github.com/adamotte/agent-workspace-reader/releases/latest) et décompressez-le dans un dossier que vous conserverez, par exemple `agent-workspace-reader/` : l'extension se charge depuis ce dossier.
+
+Pour la construire à partir des sources, avec Node.js 16 ou plus récent et [pnpm](https://pnpm.io) :
 
 ```bash
 git clone https://github.com/adamotte/agent-workspace-reader.git
@@ -84,11 +86,15 @@ pnpm install
 pnpm build
 ```
 
-L'extension décompressée se trouve dans `extension/` et le paquet `agent-workspace-reader-<version>.zip` dans `dist/`. Ensuite, dans Chrome ou Edge :
+L'extension décompressée se trouve dans `extension/` et le même zip dans `dist/`.
+
+Ensuite, dans Chrome ou Edge :
 
 1. Ouvrez `chrome://extensions/` (ou `edge://extensions/`) et activez le **mode développeur**.
-2. Cliquez sur **Charger l'extension non empaquetée** et sélectionnez le dossier `extension/`.
+2. Cliquez sur **Charger l'extension non empaquetée** et sélectionnez le dossier décompressé (ou `extension/` si vous l'avez construite).
 3. Ouvrez les **détails** de l'extension et activez **Autoriser l'accès aux URL de fichiers** : par défaut, les navigateurs tiennent les extensions à l'écart des fichiers locaux.
+
+Pour mettre à jour, décompressez la nouvelle release dans le même dossier et cliquez sur le bouton de rechargement de l'extension sur `chrome://extensions/`.
 
 ## 🔧 Configuration
 
@@ -140,6 +146,8 @@ node --test "tests/*.test.mjs"    # tests unitaires
 ```
 
 Les tests unitaires importent directement les sources TypeScript, ce qui demande Node.js 22.18 ou plus récent.
+
+Le [workflow Build](.github/workflows/build.yml) lance les tests et le build à chaque push et pull request, et conserve le zip comme artefact du workflow. Quand un commit sur `main` porte une version de `package.json` qui n'a pas encore de release, il publie une release `v<version>` avec le zip en pièce jointe : c'est le changement de version qui publie.
 
 ## 🙏 Remerciements
 

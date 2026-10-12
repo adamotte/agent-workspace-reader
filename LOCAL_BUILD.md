@@ -18,13 +18,18 @@ pnpm run build
 The unpacked extension lands in `extension/`, the
 `agent-workspace-reader-<version>.zip` package in `dist/`.
 
+The same zip is attached to each
+[GitHub release](https://github.com/adamotte/agent-workspace-reader/releases),
+built by `.github/workflows/build.yml`.
+
 ## Install
 
 1. Open `chrome://extensions/` (or `edge://extensions/`).
 2. Turn on Developer mode.
 3. Disable Markdown Reader, the original extension, if it is installed from a
    store, so two content scripts don't both handle Markdown pages.
-4. Click "Load unpacked" and select the `extension/` folder.
+4. Click "Load unpacked" and select the `extension/` folder, or the folder
+   where you unzipped a release.
 5. Open the extension's details and turn on "Allow access to file URLs".
 6. Optionally, set the local folder root in the popup, for example
    `C:\Users\name\Notes` or `/Users/name/Obsidian`.
