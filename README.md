@@ -89,7 +89,7 @@ Agent Workspace Reader isn't published on extension stores yet. Download `agent-
 2. Click **Load unpacked** and select the unzipped folder.
 3. Open the extension's **Details** and turn on **Allow access to file URLs**: browsers keep extensions away from local files by default.
 
-To update, unzip the new release over the same folder and click the extension's reload button on `chrome://extensions/`.
+To update, unzip the new release over the same folder and click the extension's reload button on `chrome://extensions/`, or **Reload the extension** at the bottom of the settings, which also reloads the open pages.
 
 You can also [build it from source](#%EF%B8%8F-development).
 

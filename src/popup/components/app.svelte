@@ -63,6 +63,11 @@
     if (rootURL) chrome.tabs.create({ url: `${rootURL}?grant=forget` })
   }
 
+  function reloadExtension() {
+    chrome.runtime.sendMessage({ action: 'reloadExtension' })
+    window.close()
+  }
+
   function displayPath(url: string): string {
     try {
       const path = decodeURIComponent(new URL(url).pathname).replace(/\/$/, '')
@@ -282,6 +287,13 @@
           {/each}
         </Select>
       </FormField>
+    </div>
+
+    <div class="form-item">
+      <button class="grant-button" type="button" on:click={reloadExtension}>
+        {localize('label_reload-extension')}
+      </button>
+      <div class="help-item">{localize('help_reload-extension')}</div>
     </div>
   </div>
 </main>

@@ -42,6 +42,11 @@ async function messageHandler(
     case 'resolveWikiLinks':
       resolveWikiLinkTargets(data, sender.url).then(callback)
       break
+    case 'reloadExtension':
+      // After an update of the unpacked extension; see onInstalled below.
+      await storage.set({ reloadPagesOnStart: true })
+      chrome.runtime.reload()
+      break
     case 'openSettings':
       // The popup, as a window of its own: a page opened with --app has no
       // toolbar to reach it from.
@@ -376,3 +381,16 @@ function updatePage(key: keyof typeof actionMap, value?: any) {
     }
   })
 }
+
+// Reloads the local pages after the popup's reload button, so that they run
+// the new content script rather than the orphaned one.
+chrome.runtime.onInstalled.addListener(async () => {
+  const { reloadPagesOnStart } = await storage.get('reloadPagesOnStart')
+  if (!reloadPagesOnStart) return
+  await storage.set({ reloadPagesOnStart: false })
+  chrome.tabs.query({ url: 'file://*/*' }, tabs => {
+    for (const tab of tabs) {
+      if (tab.id !== undefined) chrome.tabs.reload(tab.id)
+    }
+  })
+})

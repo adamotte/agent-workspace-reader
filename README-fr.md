@@ -89,7 +89,7 @@ Agent Workspace Reader n'est pas encore publiée sur les boutiques d'extensions.
 2. Cliquez sur **Charger l'extension non empaquetée** et sélectionnez le dossier décompressé.
 3. Ouvrez les **détails** de l'extension et activez **Autoriser l'accès aux URL de fichiers** : par défaut, les navigateurs tiennent les extensions à l'écart des fichiers locaux.
 
-Pour mettre à jour, décompressez la nouvelle release dans le même dossier et cliquez sur le bouton de rechargement de l'extension sur `chrome://extensions/`.
+Pour mettre à jour, décompressez la nouvelle release dans le même dossier et cliquez sur le bouton de rechargement de l'extension sur `chrome://extensions/`, ou sur **Recharger l'extension** en bas des réglages, qui recharge aussi les pages ouvertes.
 
 Vous pouvez aussi la [construire à partir des sources](#%EF%B8%8F-développement).
 

@@ -41,6 +41,9 @@ export interface Data {
   // The folders the user granted writing to, for the popup to show; the
   // handles themselves live in IndexedDB on the file: origin
   writeRoots?: string[]
+  // Set by the popup's reload button: the pages reload once the extension is
+  // back, so that they run the new content script
+  reloadPagesOnStart?: boolean
 }
 
 export function getDefaultData(mergeData: Data = {}): Data {
