@@ -515,6 +515,25 @@ body.md-reader {
           }
         }
         .theme(); // markdown theme
+        // The theme sets every image to width and height auto, and right
+        // aligned ones to 120px, so the width and height attributes of raw
+        // HTML images had no effect. revert-layer rolls the cascade back to
+        // the attributes, as on GitHub; max-width still applies.
+        img[width],
+        img[height] {
+          width: revert-layer;
+          height: revert-layer;
+        }
+        img[align] {
+          width: revert-layer !important;
+        }
+        // GitHub's gap between a floated image and the text beside it
+        img[align='right'] {
+          margin-left: 20px;
+        }
+        img[align='left'] {
+          margin-right: 20px;
+        }
         // Wrapping only between words keeps table layout from collapsing a
         // column narrower than its longest word when the table-columns
         // plugin removes the minimum width.
