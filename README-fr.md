@@ -10,6 +10,7 @@
 [![Version](https://img.shields.io/github/package-json/v/adamotte/agent-workspace-reader?style=flat-square)](package.json)
 [![Manifest V3](https://img.shields.io/badge/manifest-v3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](src/manifest.json)
 [![Chrome | Edge](https://img.shields.io/badge/Chrome%20%7C%20Edge-extension-0078D7?style=flat-square&logo=microsoftedge&logoColor=white)](#-installation)
+[![Build](https://img.shields.io/github/actions/workflow/status/adamotte/agent-workspace-reader/build.yml?branch=main&style=flat-square&label=build)](https://github.com/adamotte/agent-workspace-reader/actions/workflows/build.yml)
 [![Dernier commit](https://img.shields.io/github/last-commit/adamotte/agent-workspace-reader/main?style=flat-square&label=dernier%20commit)](https://github.com/adamotte/agent-workspace-reader/commits/main)
 
 [English](./README.md) | Français
