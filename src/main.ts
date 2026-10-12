@@ -5,6 +5,7 @@ import Ele, { svg } from '@/core/ele'
 import { initPlugins } from '@/plugins'
 import lifecycle from '@/core/lifecycle'
 import className from '@/config/class-name'
+import i18n from '@/config/i18n'
 import type { Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
@@ -35,6 +36,7 @@ import '@/style/index.less'
 
 function main(data: Data) {
   const configData = getDefaultData(data)
+  const localize = i18n(configData.language)
   const directoryPage = isLocalDirectoryPage()
   const localPage = window.location.protocol === 'file:'
   const configuredRootURL = normalizeFolderRootURL(configData.folderRootPath)
@@ -110,7 +112,7 @@ function main(data: Data) {
   mdRaw = directoryPage
     ? `# 📁 ${escapeMarkdown(
         getDirectoryName(window.location.href),
-      )}\n\n从左侧文件夹目录选择 Markdown 文件。`
+      )}\n\n${localize('folder_pick_file')}`
     : rawContainer?.textContent
 
   /* render content */
@@ -135,7 +137,7 @@ function main(data: Data) {
       })
       const ele = target instanceof Ele ? target.ele : target
       if (useConfiguredRoot && configuredRootURL) {
-        void resolveWikiLinks(ele, configuredRootURL)
+        void resolveWikiLinks(ele, configuredRootURL, localize)
       }
       document.title = ele.querySelector('h1')?.textContent.trim() ?? ''
       globalEvent.emit(
@@ -158,6 +160,7 @@ function main(data: Data) {
         const resolved = await resolveWikiLink(
           unresolvedLink,
           configuredRootURL,
+          localize,
         )
         if (resolved) window.location.href = resolved
         return
@@ -188,8 +191,8 @@ function main(data: Data) {
       className: className.FOLDER_RESIZER,
       role: 'separator',
       tabindex: '0',
-      title: '拖动调整文件夹与目录高度；双击恢复默认',
-      'aria-label': '调整文件夹与目录高度',
+      title: localize('folder_resize_title'),
+      'aria-label': localize('folder_resize'),
       'aria-orientation': 'horizontal',
     })
     mdSide.append([folderBrowser, folderResizer])
@@ -221,6 +224,7 @@ function main(data: Data) {
         configData.folderSortOrder = sortOrder
         void storage.set('folderSortOrder', sortOrder)
       },
+      localize,
     })
   }
   mdSide.append(mdOutline)

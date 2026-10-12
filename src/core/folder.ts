@@ -1,5 +1,8 @@
 import className from '@/config/class-name'
+import i18n from '@/config/i18n'
 import { FOLDER_SORT_ORDERS, type FolderSortOrder } from '@/core/data'
+
+type Localize = ReturnType<typeof i18n>
 
 const MARKDOWN_EXTENSIONS = new Set([
   'md',
@@ -9,16 +12,6 @@ const MARKDOWN_EXTENSIONS = new Set([
   'markdown',
   'txt',
 ])
-
-const FOLDER_SORT_OPTIONS: Array<{
-  value: FolderSortOrder
-  label: string
-}> = [
-  { value: 'name-asc', label: '文件名 (A-Z)' },
-  { value: 'name-desc', label: '文件名 (Z-A)' },
-  { value: 'modified-desc', label: '编辑时间 (从新到旧)' },
-  { value: 'modified-asc', label: '编辑时间 (从旧到新)' },
-]
 
 export interface FolderEntry {
   name: string
@@ -41,6 +34,7 @@ interface FolderBrowserOptions {
   showParentLink?: boolean
   sortOrder?: FolderSortOrder
   onSortOrderChange?: (sortOrder: FolderSortOrder) => void
+  localize?: Localize
 }
 
 export function isLocalDirectoryPage(
@@ -230,6 +224,7 @@ export async function renderFolderBrowser({
   showParentLink = true,
   sortOrder = 'name-desc',
   onSortOrderChange,
+  localize = i18n(),
 }: FolderBrowserOptions): Promise<void> {
   container.replaceChildren()
   let activeSortOrder = normalizeFolderSortOrder(sortOrder)
@@ -246,8 +241,8 @@ export async function renderFolderBrowser({
   const parentLink = document.createElement('a')
   parentLink.href = new URL('../', rootURL).href
   parentLink.className = className.FOLDER_PARENT
-  parentLink.title = '打开上级文件夹'
-  parentLink.textContent = '上级'
+  parentLink.title = localize('folder_parent_title')
+  parentLink.textContent = localize('folder_parent')
 
   const sortControl = document.createElement('label')
   sortControl.className = className.FOLDER_SORT
@@ -255,15 +250,15 @@ export async function renderFolderBrowser({
   sortIcon.textContent = '⇅'
   sortIcon.setAttribute('aria-hidden', 'true')
   const sortSelect = document.createElement('select')
-  sortSelect.setAttribute('aria-label', '目录排序')
-  for (const option of FOLDER_SORT_OPTIONS) {
+  sortSelect.setAttribute('aria-label', localize('folder_sort'))
+  for (const value of FOLDER_SORT_ORDERS) {
     const optionElement = document.createElement('option')
-    optionElement.value = option.value
-    optionElement.textContent = option.label
+    optionElement.value = value
+    optionElement.textContent = localize(`folder_sort_${value}`)
     sortSelect.append(optionElement)
   }
   sortSelect.value = activeSortOrder
-  updateSortControlTitle(sortControl, activeSortOrder)
+  updateSortControlTitle(sortControl, activeSortOrder, localize)
   sortControl.append(sortIcon, sortSelect)
 
   header.append(rootLink, sortControl)
@@ -273,17 +268,23 @@ export async function renderFolderBrowser({
   tree.className = className.FOLDER_TREE
   const status = document.createElement('div')
   status.className = className.FOLDER_STATUS
-  status.textContent = '正在读取文件夹…'
+  status.textContent = localize('folder_loading')
   container.append(header, status, tree)
 
   try {
-    const html = initialHTML ?? (await fetchLocalText(rootURL))
+    const html = initialHTML ?? (await fetchLocalText(rootURL, localize))
     let renderVersion = 0
     const renderTree = async () => {
       const version = ++renderVersion
       const entries = parseDirectoryEntries(html, rootURL, activeSortOrder)
       const nextTree = document.createElement('ul')
-      await renderEntries(nextTree, entries, currentURL, activeSortOrder)
+      await renderEntries(
+        nextTree,
+        entries,
+        currentURL,
+        activeSortOrder,
+        localize,
+      )
       if (version !== renderVersion) return
 
       tree.replaceChildren(...Array.from(nextTree.childNodes))
@@ -294,21 +295,23 @@ export async function renderFolderBrowser({
           ?.scrollIntoView({ block: 'nearest' })
       })
       if (!entries.length) {
-        status.textContent = '没有 Markdown 文件'
+        status.textContent = localize('folder_empty')
         container.insertBefore(status, tree)
       }
     }
 
     sortSelect.addEventListener('change', () => {
       activeSortOrder = normalizeFolderSortOrder(sortSelect.value)
-      updateSortControlTitle(sortControl, activeSortOrder)
+      updateSortControlTitle(sortControl, activeSortOrder, localize)
       onSortOrderChange?.(activeSortOrder)
       void renderTree()
     })
     await renderTree()
   } catch (error) {
     status.classList.add(className.FOLDER_STATUS_ERROR)
-    status.textContent = `目录读取失败：${error.message || error}`
+    status.textContent = `${localize('folder_read_failed')}: ${
+      error.message || error
+    }`
   }
 }
 
@@ -317,6 +320,7 @@ async function renderEntries(
   entries: FolderEntry[],
   currentURL?: string,
   sortOrder: FolderSortOrder = 'name-desc',
+  localize: Localize = i18n(),
 ): Promise<void> {
   for (const entry of entries) {
     const item = document.createElement('li')
@@ -334,23 +338,29 @@ async function renderEntries(
         loadPromise = (async () => {
           summary.classList.add(className.FOLDER_LOADING)
           try {
-            const html = await fetchLocalText(entry.url)
+            const html = await fetchLocalText(entry.url, localize)
             const childEntries = parseDirectoryEntries(
               html,
               entry.url,
               sortOrder,
             )
-            await renderEntries(children, childEntries, currentURL, sortOrder)
+            await renderEntries(
+              children,
+              childEntries,
+              currentURL,
+              sortOrder,
+              localize,
+            )
             if (!childEntries.length) {
               const empty = document.createElement('li')
               empty.className = className.FOLDER_EMPTY
-              empty.textContent = '没有 Markdown 文件'
+              empty.textContent = localize('folder_empty')
               children.append(empty)
             }
           } catch (error) {
             const failed = document.createElement('li')
             failed.className = className.FOLDER_STATUS_ERROR
-            failed.textContent = '读取失败'
+            failed.textContent = localize('folder_child_failed')
             children.append(failed)
           } finally {
             summary.classList.remove(className.FOLDER_LOADING)
@@ -416,14 +426,14 @@ function normalizeFolderSortOrder(value: string): FolderSortOrder {
 function updateSortControlTitle(
   control: HTMLElement,
   sortOrder: FolderSortOrder,
+  localize: Localize,
 ) {
-  const label = FOLDER_SORT_OPTIONS.find(
-    option => option.value === sortOrder,
-  )?.label
-  control.title = `排序：${label}`
+  control.title = `${localize('folder_sort')}: ${localize(
+    `folder_sort_${sortOrder}`,
+  )}`
 }
 
-function fetchLocalText(url: string): Promise<string> {
+function fetchLocalText(url: string, localize: Localize): Promise<string> {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(
       { action: 'fetchUrl', data: { url } },
@@ -433,7 +443,7 @@ function fetchLocalText(url: string): Promise<string> {
           return
         }
         if (!response?.ok) {
-          reject(new Error(response?.error || '无法读取本地文件夹'))
+          reject(new Error(response?.error || localize('folder_unreadable')))
           return
         }
         resolve(response.text || '')
