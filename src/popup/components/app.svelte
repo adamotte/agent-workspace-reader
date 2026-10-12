@@ -73,10 +73,6 @@
   }
 
   $: writeRoots = data.writeRoots ?? []
-  $: grantStatus = localize('grant_status').replace(
-    '{paths}',
-    writeRoots.map(displayPath).join(', '),
-  )
 </script>
 
 <main>
@@ -185,7 +181,14 @@
         </button>
         <div class="help-item">{localize('help_grant-write')}</div>
         <div class="help-item grant-status">
-          {#if writeRoots.length}{grantStatus}{/if}
+          {#if writeRoots.length}
+            {localize('grant_status')}
+            <ul class="grant-list">
+              {#each writeRoots as root}
+                <li>{displayPath(root)}</li>
+              {/each}
+            </ul>
+          {/if}
           <button
             class="forget-button"
             type="button"
@@ -355,12 +358,19 @@
     color: #243158e3;
     word-break: break-all;
   }
+  .grant-list {
+    margin: 2px 0 4px;
+    padding-left: 16px;
+  }
+  .grant-list li {
+    margin: 1px 0;
+  }
   .forget-button:disabled {
     color: #24315870;
     cursor: default;
   }
   .forget-button {
-    margin-left: 6px;
+    margin-left: 0;
     padding: 0;
     border: none;
     background: none;
