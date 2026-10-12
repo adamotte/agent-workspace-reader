@@ -32,6 +32,7 @@ export default {
   TABLE_WRAP: p`table-wrap`,
   TABLE_NUMBER: p`table-number`,
   MEDIA: p`media`,
+  IMAGE_ALT: p`image-alt`,
   VIEWER_STATUS: p`viewer-status`,
   VIEWER_ERROR: p`viewer-status--error`,
   WIKI_LINK: p`wiki-link`,

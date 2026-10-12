@@ -23,7 +23,7 @@ Coding and research agents (Claude Code, Codex, Copilot, Cursor…) leave their 
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> **Local and read-only.** The extension only runs on `file://` URLs and needs no permission beyond storing its own settings. It never modifies or uploads your files, and it doesn't load remote images or stylesheets: opening a document never contacts another host.
+> **Local and read-only.** The extension only runs on `file://` URLs and needs no permission beyond storing its own settings. It never modifies or uploads your files, and it doesn't load remote images or stylesheets: opening a document never contacts another host. A remote or missing image shows its alt text instead, so badges still read.
 
 ---
 

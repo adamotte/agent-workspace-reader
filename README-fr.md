@@ -23,7 +23,7 @@ Les agents de code et de recherche (Claude Code, Codex, Copilot, Cursor…) lais
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> **Local et en lecture seule.** L'extension ne s'exécute que sur les URL `file://` et ne demande aucune autorisation hormis le stockage de ses propres réglages. Elle ne modifie ni n'envoie jamais vos fichiers, et ne charge ni image ni feuille de style distante : ouvrir un document ne contacte jamais un autre hôte.
+> **Local et en lecture seule.** L'extension ne s'exécute que sur les URL `file://` et ne demande aucune autorisation hormis le stockage de ses propres réglages. Elle ne modifie ni n'envoie jamais vos fichiers, et ne charge ni image ni feuille de style distante : ouvrir un document ne contacte jamais un autre hôte. Une image distante ou introuvable est remplacée par son texte alternatif, les badges restent donc lisibles.
 
 ---
 

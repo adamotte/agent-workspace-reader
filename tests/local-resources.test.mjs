@@ -102,3 +102,23 @@ test('keeps links but drops remote resources', () => {
   assert.equal(isLocalAttribute('span', 'style', 'color: red', base), true)
   assert.equal(isLocalAttribute('img', 'alt', 'C:\\Notes\\a.png', base), true)
 })
+
+test('names an image that is not shown', async () => {
+  const { imagePlaceholderText } = await import(
+    '../src/core/local-resources.ts'
+  )
+  assert.equal(
+    imagePlaceholderText('License: MIT', 'https://img.shields.io/badge/x'),
+    'License: MIT',
+  )
+  assert.equal(
+    imagePlaceholderText('  ', 'https://example.com/pics/chart%20v2.png'),
+    'chart v2.png',
+  )
+  assert.equal(imagePlaceholderText('', 'https://example.com/'), 'example.com')
+  assert.equal(
+    imagePlaceholderText('', 'file:///C:/Notes/missing.png'),
+    'missing.png',
+  )
+  assert.equal(imagePlaceholderText('', ''), '')
+})

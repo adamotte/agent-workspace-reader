@@ -18,6 +18,7 @@ import {
 } from '@/core/file-types'
 import { decodeHash, legacySlug, slugify } from '@/core/slug'
 import { resolveWikiLink, resolveWikiLinks } from '@/core/wiki-link'
+import { showImageAlt } from '@/core/image-alt'
 import {
   rebaseRelativeURLs,
   renderMedia,
@@ -217,6 +218,7 @@ function main(data: Data) {
         } else {
           target.innerHTML = html
         }
+        showImageAlt(ele, localize)
         if (useConfiguredRoot && configuredRootURL) {
           void resolveWikiLinks(ele, configuredRootURL, localize, fileURL)
         }

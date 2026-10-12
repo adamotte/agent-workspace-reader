@@ -77,6 +77,10 @@ export function isLocalAttribute(
   return true
 }
 
+// Keeps the address of an image's removed src, so the page can show its alt
+// text in place of the image; see image-alt.ts.
+export const BLOCKED_SRC_ATTR = 'data-blocked-src'
+
 // Drops what would make the browser fetch from another host: the attribute
 // that holds the address, or the whole stylesheet.
 export function removeRemoteResources(element: Element, base: string): void {
@@ -90,7 +94,26 @@ export function removeRemoteResources(element: Element, base: string): void {
     const value = element.getAttribute(name) ?? ''
     if (!isLocalAttribute(element.localName, name, value, base)) {
       element.removeAttribute(name)
+      if (element.localName === 'img' && name.toLowerCase() === 'src') {
+        element.setAttribute(BLOCKED_SRC_ATTR, value.trim())
+      }
     }
+  }
+}
+
+// The text shown in place of an image that isn't loaded: its alt text, else
+// its file name, else its host.
+export function imagePlaceholderText(alt: string, url: string): string {
+  const text = alt.trim()
+  if (text) return text
+  try {
+    const parsed = new URL(url)
+    const name = decodeURIComponent(
+      parsed.pathname.split('/').filter(Boolean).pop() ?? '',
+    )
+    return name || parsed.host
+  } catch {
+    return url.trim()
   }
 }
 
