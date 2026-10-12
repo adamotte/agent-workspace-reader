@@ -42,6 +42,17 @@ async function messageHandler(
     case 'resolveWikiLinks':
       resolveWikiLinkTargets(data, sender.url).then(callback)
       break
+    case 'openSettings':
+      // The popup, as a window of its own: a page opened with --app has no
+      // toolbar to reach it from.
+      chrome.windows.create({
+        url: chrome.runtime.getURL('popup.html'),
+        type: 'popup',
+        width: 420,
+        height: 780,
+      })
+      callback?.()
+      break
   }
 }
 
@@ -351,15 +362,17 @@ function updatePage(key: keyof typeof actionMap, value?: any) {
   const action = actionMap[key]
   if (!action) return
 
-  chrome.tabs.query({ currentWindow: true, active: true }, tabs => {
-    const tabId = tabs[0]?.id
-    if (tabId === undefined) return
-
-    chrome.tabs.sendMessage(tabId, { action, data: { key, value } }, () => {
-      const error = chrome.runtime.lastError
-      if (error && !error.message?.includes('Receiving end does not exist')) {
-        console.warn('Failed to update the active tab:', error.message)
-      }
-    })
+  // Every local page follows, whichever window the settings were changed
+  // from: the popup, or its own window opened from a page.
+  chrome.tabs.query({ url: 'file://*/*' }, tabs => {
+    for (const tab of tabs) {
+      if (tab.id === undefined) continue
+      chrome.tabs.sendMessage(tab.id, { action, data: { key, value } }, () => {
+        const error = chrome.runtime.lastError
+        if (error && !error.message?.includes('Receiving end does not exist')) {
+          console.warn('Failed to update a tab:', error.message)
+        }
+      })
+    }
   })
 }

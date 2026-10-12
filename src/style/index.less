@@ -271,6 +271,24 @@ body.md-reader {
         font-size: 12px;
         text-decoration: none;
       }
+      .md-reader__folder-settings {
+        flex: none;
+        width: 27px;
+        height: 27px;
+        padding: 0;
+        border: 1px solid var(--color-side-border);
+        border-radius: 5px;
+        background: none;
+        color: var(--color-side);
+        cursor: pointer;
+        font-size: 17px;
+        line-height: 1;
+        &:hover,
+        &:focus-visible {
+          background: var(--color-button-bg-hover);
+          color: var(--color-primary);
+        }
+      }
       .md-reader__folder-sort {
         position: relative;
         flex: none;

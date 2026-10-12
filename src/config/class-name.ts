@@ -19,6 +19,7 @@ export default {
   FOLDER_ROOT: p`folder-root`,
   FOLDER_PARENT: p`folder-parent`,
   FOLDER_SORT: p`folder-sort`,
+  FOLDER_SETTINGS: p`folder-settings`,
   FOLDER_TREE: p`folder-tree`,
   FOLDER_STATUS: p`folder-status`,
   FOLDER_STATUS_ERROR: p`folder-status--error`,

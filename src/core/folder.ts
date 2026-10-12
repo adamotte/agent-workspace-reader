@@ -35,6 +35,8 @@ interface FolderBrowserOptions {
   showParentLink?: boolean
   sortOrder?: FolderSortOrder
   onSortOrderChange?: (sortOrder: FolderSortOrder) => void
+  // Opens the extension's settings; an app window has no toolbar for them
+  onOpenSettings?: () => void
   localize?: Localize
 }
 
@@ -219,6 +221,7 @@ export function renderFolderBrowser({
   showParentLink = true,
   sortOrder = 'name-asc',
   onSortOrderChange,
+  onOpenSettings,
   localize = i18n(),
 }: FolderBrowserOptions): FolderBrowser {
   container.replaceChildren()
@@ -258,6 +261,16 @@ export function renderFolderBrowser({
   sortControl.append(sortIcon, sortSelect)
 
   header.append(rootLink, sortControl)
+  if (onOpenSettings) {
+    const settingsButton = document.createElement('button')
+    settingsButton.type = 'button'
+    settingsButton.className = className.FOLDER_SETTINGS
+    settingsButton.title = localize('settings_open')
+    settingsButton.setAttribute('aria-label', localize('settings_open'))
+    settingsButton.textContent = '⚙'
+    settingsButton.addEventListener('click', onOpenSettings)
+    header.append(settingsButton)
+  }
   if (showParentLink) header.append(parentLink)
 
   const tree = document.createElement('ul')

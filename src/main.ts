@@ -401,6 +401,9 @@ function main(data: Data) {
         configData.folderSortOrder = sortOrder
         void storage.set('folderSortOrder', sortOrder)
       },
+      onOpenSettings: () => {
+        chrome.runtime.sendMessage({ action: 'openSettings' })
+      },
       localize,
     })
     folderBrowser.on('click', (e: MouseEvent) => {
