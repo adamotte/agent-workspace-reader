@@ -26,7 +26,7 @@
 
   storage.get().then((_data: Data) => {
     // need an assignment to updata UI
-    data = { ...data, ..._data }
+    data = { ...data, ..._data, language: i18n(_data.language).locale }
   })
 
   $: if (data.language) {

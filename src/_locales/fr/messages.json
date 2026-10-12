@@ -1,0 +1,20 @@
+{
+  "ext_name": {
+    "message": "MD Reader"
+  },
+  "ext_desc": {
+    "message": "Une extension de lecture Markdown pour Chrome."
+  },
+  "command_toggle_side": {
+    "message": "Afficher/masquer le panneau latéral"
+  },
+  "command_toggle_centered": {
+    "message": "Activer/désactiver le centrage"
+  },
+  "command_toggle_refresh": {
+    "message": "Activer/désactiver l'actualisation auto"
+  },
+  "command_toggle_theme": {
+    "message": "Changer de thème"
+  }
+}

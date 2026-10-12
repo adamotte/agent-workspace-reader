@@ -139,6 +139,7 @@ function main(data: Data) {
         mermaidLayout: configData.mermaidLayout,
         wikiLinkSourceURL: window.location.href,
         wikiLinkRootURL: useConfiguredRoot ? configuredRootURL : undefined,
+        localize,
         ...options,
       })
       const ele = target instanceof Ele ? target.ele : target
@@ -271,7 +272,7 @@ function main(data: Data) {
         'button',
         {
           className: [className.MD_BUTTON, className.CODE_TOGGLE_BTN],
-          title: 'Toggle raw',
+          title: localize('title_toggle-raw'),
         },
         svg(codeIcon),
       )
@@ -284,7 +285,7 @@ function main(data: Data) {
     'button',
     {
       className: [className.MD_BUTTON, className.SIDE_EXPAND_BTN],
-      title: 'Expand side',
+      title: localize('title_expand-side'),
     },
     svg(sideIcon),
   )
@@ -333,7 +334,7 @@ function main(data: Data) {
     'button',
     {
       className: [className.MD_BUTTON, className.GO_TOP_BTN],
-      title: 'Go top',
+      title: localize('title_go-top'),
     },
     svg(goTopIcon),
   )

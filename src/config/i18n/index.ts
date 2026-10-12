@@ -2,10 +2,19 @@ import localeJson from './locale.json'
 
 /* Unmatched language (in locale.json file) default use the 'en'. */
 const DEFAULT_LOCALE: string = 'en'
+
+/* Exact match first ('fr-FR'), then the base language ('fr'), else 'en'.
+ * Also maps a language saved by an older build (e.g. 'zh-CN') back to 'en'. */
+function resolveLocale(locale: string = ''): string {
+  const has = (key: string) =>
+    Object.prototype.hasOwnProperty.call(localeJson, key)
+  if (has(locale)) return locale
+  const base = locale.split(/[-_]/)[0]
+  return has(base) ? base : DEFAULT_LOCALE
+}
+
 /* The language of your browser Settings. */
-const BROWSER_LOCALE: string = chrome.i18n.getUILanguage()
-const targetLocale =
-  BROWSER_LOCALE in localeJson ? BROWSER_LOCALE : DEFAULT_LOCALE
+const targetLocale = resolveLocale(chrome.i18n.getUILanguage())
 
 interface Localize {
   (field: string): string
@@ -18,8 +27,9 @@ interface I18n {
 }
 
 const i18n: I18n = (locale: string = targetLocale): Localize => {
+  locale = resolveLocale(locale)
   const defaultLocalizeMap: Object = localeJson[DEFAULT_LOCALE]
-  const localizeMap: Object = localeJson[locale] || defaultLocalizeMap
+  const localizeMap: Object = localeJson[locale]
 
   const localize: Localize = (field: string): string => {
     /* Also includes fields (default 'en') */

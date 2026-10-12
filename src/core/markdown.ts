@@ -22,6 +22,7 @@ import { isDarkTheme } from '@/config/page-themes'
 import successIcon from '@/images/icon_success.svg'
 import copyIcon from '@/images/icon_copy.svg'
 import className from '@/config/class-name'
+import i18n from '@/config/i18n'
 import Ele, { svg } from './ele'
 import { escapeHtml } from 'markdown-it/lib/common/utils.mjs'
 import GithubCompatPlugin, { MathFencePlugin } from '@/core/github/compat'
@@ -61,6 +62,7 @@ export interface MdOptions {
   config?: MarkdownIt.Options
   plugins?: Array<string>
   githubCompat?: boolean
+  localize?: (field: string) => string
 }
 
 // Plugins whose syntax GitHub doesn't support and that GitHub-compatible mode
@@ -74,12 +76,13 @@ function initRender(options: MdOptions) {
     config = {},
     plugins = [...MD_PLUGINS],
     githubCompat = false,
+    localize = i18n(),
   } = options
   const copyButton = new Ele<HTMLElement>(
     'button',
     {
       className: [className.MD_BUTTON, className.COPY_BTN],
-      title: 'Copy',
+      title: localize('title_copy'),
     },
     [
       svg(copyIcon, { className: 'icon-copy' }),
