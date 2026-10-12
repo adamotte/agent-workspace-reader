@@ -1,46 +1,56 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const {
-  getFileKind,
-  getDisplayName,
-  hasKnownExtension,
-  CODE_LANGUAGES,
-  NATIVE_KINDS,
-} = await import('../src/core/file-types.ts')
+const { getFileType, getDisplayName, hasKnownExtension, opensInViewer } =
+  await import('../src/core/file-types.ts')
+
+const kind = name => getFileType(name)?.kind
 
 test('classifies files by extension, case-insensitively', () => {
-  assert.equal(getFileKind('note.md'), 'markdown')
-  assert.equal(getFileKind('dir/Note.MARKDOWN'), 'markdown')
-  assert.equal(getFileKind('todo.txt'), 'text')
-  assert.equal(getFileKind('data.json'), 'json')
-  assert.equal(getFileKind('conf.yml'), 'yaml')
-  assert.equal(getFileKind('conf.YAML'), 'yaml')
-  assert.equal(getFileKind('page.htm'), 'html')
-  assert.equal(getFileKind('doc.pdf'), 'pdf')
-  assert.equal(getFileKind('data.csv'), undefined)
-  assert.equal(getFileKind('a.constructor'), undefined)
+  assert.equal(kind('note.md'), 'markdown')
+  assert.equal(kind('dir/Note.MARKDOWN'), 'markdown')
+  assert.equal(kind('todo.txt'), 'text')
+  assert.deepEqual(getFileType('data.json'), {
+    kind: 'code',
+    icon: 'json',
+    language: 'json',
+  })
+  assert.equal(getFileType('conf.YML').language, 'yaml')
+  assert.equal(getFileType('app.ts').language, 'typescript')
+  assert.equal(getFileType('feed.xml').language, 'xml')
+  assert.equal(kind('data.csv'), 'table')
+  assert.equal(kind('data.tsv'), 'table')
+  assert.equal(kind('photo.JPG'), 'image')
+  assert.equal(kind('clip.webm'), 'video')
+  assert.equal(kind('song.mp3'), 'audio')
+  assert.equal(kind('page.htm'), 'native')
+  assert.equal(kind('doc.pdf'), 'native')
+  assert.equal(kind('archive.zip'), undefined)
+  assert.equal(kind('a.constructor'), undefined)
 })
 
-test('lists well-known extensionless text files only', () => {
-  assert.equal(getFileKind('LICENSE'), 'text')
-  assert.equal(getFileKind('repo/License'), 'text')
-  assert.equal(getFileKind('Makefile'), undefined)
-  assert.equal(getFileKind('.gitignore'), undefined)
+test('lists well-known extensionless files only', () => {
+  assert.equal(kind('LICENSE'), 'text')
+  assert.equal(kind('repo/License'), 'text')
+  assert.equal(getFileType('Dockerfile').language, 'dockerfile')
+  assert.equal(kind('Procfile'), undefined)
+  assert.equal(kind('.gitignore'), undefined)
 })
 
 test('drops only extensions the icon conveys', () => {
   assert.equal(getDisplayName('note-a.md'), 'note-a')
   assert.equal(getDisplayName('v1.2 notes.md'), 'v1.2 notes')
-  assert.equal(getDisplayName('doc.pdf'), 'doc')
+  assert.equal(getDisplayName('data.csv'), 'data')
   assert.equal(getDisplayName('LICENSE'), 'LICENSE')
   assert.equal(getDisplayName('archive.tar.gz'), 'archive.tar.gz')
   assert.equal(hasKnownExtension('README'), false)
 })
 
-test('maps code and native kinds', () => {
-  assert.equal(CODE_LANGUAGES.json, 'json')
-  assert.equal(CODE_LANGUAGES.yaml, 'yaml')
-  assert.equal(CODE_LANGUAGES.markdown, undefined)
-  assert.deepEqual([...NATIVE_KINDS].sort(), ['html', 'pdf'])
+test('routes files the browser cannot show with md-reader to the viewer', () => {
+  for (const name of ['data.csv', 'app.ts', 'feed.xml', 'a.png', 'a.mp4']) {
+    assert.equal(opensInViewer(getFileType(name)), true, name)
+  }
+  for (const name of ['note.md', 'todo.txt', 'LICENSE', 'doc.pdf']) {
+    assert.equal(opensInViewer(getFileType(name)), false, name)
+  }
 })

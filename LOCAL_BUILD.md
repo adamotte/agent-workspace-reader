@@ -33,12 +33,22 @@ The unpacked extension lands in `extension/`, the zip in `dist/`.
 - Opening a local `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` or `.txt` file
   renders it, with the current folder's files and subfolders listed at the top
   of the side panel and the current file highlighted.
-- The folder list shows Markdown, text, JSON, YAML, HTML and PDF files plus
-  extensionless `LICENSE`, `README`, `CHANGELOG`, `NOTICE`, `AUTHORS`,
-  `COPYING` and `LICENCE`, each with a type icon and without its extension.
-  JSON and YAML files render as highlighted code and extensionless ones as
-  text, keeping the side panel. HTML and PDF files open in a new tab with the
-  browser's own viewer.
+- The folder list shows each file with a type icon and without its
+  extension:
+  - Markdown and text files, including extensionless `LICENSE`, `README`,
+    `CHANGELOG`, `NOTICE`, `AUTHORS`, `COPYING` and `LICENCE`, render as
+    Markdown.
+  - Code and configuration files (JSON, YAML, TOML, INI, XML, JavaScript,
+    TypeScript, CSS, Python, shell, PowerShell, SQL, Go, Rust, Java, C, C++,
+    C#, logs, `Dockerfile`, `Makefile`) render as highlighted code.
+  - CSV and TSV files render as a table. The separator (comma, semicolon, tab
+    or pipe) is detected and can be changed above the table; files that
+    aren't valid UTF-8 are read as Windows-1252.
+  - Images, video and audio play in the page.
+  - HTML and PDF files open in a new tab with the browser's own viewer.
+- Files that the browser would download (CSV) or show without md-reader
+  (images, XML) open on their folder's page, at `folder/?view=file`. Links to
+  them in Markdown open there too.
 - Opening a folder (`file:///C:/path/to/folder/`) shows the folder page.
 - Subfolders come first. The sort button switches between name and modified
   time, ascending or descending; the choice is saved.

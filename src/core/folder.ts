@@ -4,9 +4,9 @@ import { FOLDER_SORT_ORDERS, type FolderSortOrder } from '@/core/data'
 import { createIcon, type IconName } from '@/core/file-icons'
 import {
   getDisplayName,
-  getFileKind,
-  NATIVE_KINDS,
-  type FileKind,
+  getFileType,
+  opensInViewer,
+  type FileType,
 } from '@/core/file-types'
 
 type Localize = ReturnType<typeof i18n>
@@ -15,7 +15,7 @@ export interface FolderEntry {
   name: string
   url: string
   isDirectory: boolean
-  kind?: FileKind
+  type?: FileType
   modifiedTime?: number
 }
 
@@ -50,6 +50,36 @@ export function isLocalDirectoryPage(
 
 export function getParentDirectoryURL(url: string): string {
   return new URL('./', url).href
+}
+
+// The folder page shows a file of the folder through md-reader when its URL
+// names it in this query parameter; see opensInViewer.
+const VIEW_PARAM = 'view'
+
+export function getViewerURL(fileURL: string): string {
+  const folderURL = getParentDirectoryURL(fileURL)
+  const name = fileURL.slice(folderURL.length)
+  return `${folderURL}?${VIEW_PARAM}=${encodeURIComponent(name)}`
+}
+
+export function getViewedFileURL(pageURL: string): string | undefined {
+  const page = new URL(pageURL)
+  const name = page.searchParams.get(VIEW_PARAM)
+  if (!name) return undefined
+  page.search = ''
+  page.hash = ''
+  try {
+    const file = new URL(name, page)
+    // Only a file directly inside this folder
+    const inFolder =
+      !file.search &&
+      !file.hash &&
+      !file.pathname.endsWith('/') &&
+      getParentDirectoryURL(file.href) === page.href
+    return inFolder ? file.href : undefined
+  } catch {
+    return undefined
+  }
 }
 
 export function normalizeFolderRootURL(value?: string): string | undefined {
@@ -149,8 +179,8 @@ export function parseDirectoryEntries(
       ? relativePath.slice(0, -1)
       : relativePath
     if (!comparablePath || comparablePath.includes('/')) return
-    const kind = isDirectory ? undefined : getFileKind(comparablePath)
-    if (!isDirectory && !kind) return
+    const type = isDirectory ? undefined : getFileType(comparablePath)
+    if (!isDirectory && !type) return
     const knownEntry = seen.get(target.href)
     if (knownEntry) {
       if (
@@ -171,7 +201,7 @@ export function parseDirectoryEntries(
       name,
       url: target.href,
       isDirectory,
-      kind,
+      type,
       modifiedTime: Number.isFinite(modifiedTimeHint)
         ? modifiedTimeHint
         : undefined,
@@ -386,13 +416,15 @@ async function renderEntries(
       }
     } else {
       const link = document.createElement('a')
-      link.href = entry.url
+      link.href = opensInViewer(entry.type)
+        ? getViewerURL(entry.url)
+        : entry.url
       link.title = entry.name
       link.append(
-        folderIcon(entry.kind ?? 'text'),
+        folderIcon(entry.type.icon),
         folderName(getDisplayName(entry.name)),
       )
-      if (entry.kind && NATIVE_KINDS.includes(entry.kind)) {
+      if (entry.type.kind === 'native') {
         // The browser shows these itself; a new tab keeps the folder view.
         link.target = '_blank'
         link.rel = 'noopener'
@@ -447,7 +479,10 @@ function updateSortControlTitle(
   )}`
 }
 
-function fetchLocalText(url: string, localize: Localize): Promise<string> {
+export function fetchLocalText(
+  url: string,
+  localize: Localize = i18n(),
+): Promise<string> {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(
       { action: 'fetchUrl', data: { url } },

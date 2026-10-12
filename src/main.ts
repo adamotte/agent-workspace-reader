@@ -9,12 +9,21 @@ import i18n from '@/config/i18n'
 import type { Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
-import { CODE_LANGUAGES, getFileKind } from '@/core/file-types'
+import { getFileType, opensInViewer } from '@/core/file-types'
 import { decodeHash, legacySlug, slugify } from '@/core/slug'
 import { resolveWikiLink, resolveWikiLinks } from '@/core/wiki-link'
 import {
+  renderMedia,
+  renderStatus,
+  renderTable,
+  type DelimiterChoice,
+} from '@/core/viewer'
+import {
+  fetchLocalText,
   getDirectoryName,
   getParentDirectoryURL,
+  getViewedFileURL,
+  getViewerURL,
   isSameLocalURL,
   isLocalDirectoryPage,
   isURLWithinRoot,
@@ -39,10 +48,17 @@ function main(data: Data) {
   const configData = getDefaultData(data)
   const localize = i18n(configData.language)
   const directoryPage = isLocalDirectoryPage()
-  const fileName = getDirectoryName(window.location.href)
-  const fileKind = directoryPage ? undefined : getFileKind(fileName)
-  // JSON and YAML render as one highlighted code block instead of Markdown.
-  const codeLanguage = fileKind && CODE_LANGUAGES[fileKind]
+  const viewedURL = directoryPage
+    ? getViewedFileURL(window.location.href)
+    : undefined
+  const viewedType = viewedURL && getFileType(viewedURL)
+  // A folder page can show one of its files; see getViewerURL.
+  const viewedFileURL = viewedType ? viewedURL : undefined
+  const fileURL = viewedFileURL ?? window.location.href
+  const fileName = getDirectoryName(fileURL)
+  const fileType =
+    directoryPage && !viewedFileURL ? undefined : getFileType(fileName)
+  let delimiter: DelimiterChoice = 'auto'
   const localPage = window.location.protocol === 'file:'
   const configuredRootURL = normalizeFolderRootURL(configData.folderRootPath)
   const useConfiguredRoot = Boolean(
@@ -87,9 +103,19 @@ function main(data: Data) {
     actions[action]?.(value, oldValue)
   })
 
+  if (viewedType?.kind === 'native') {
+    window.location.replace(viewedURL)
+    return
+  }
   if (
     !configData.enable ||
-    (!directoryPage && !CONTENT_TYPES.includes(document.contentType))
+    !(
+      directoryPage ||
+      CONTENT_TYPES.includes(document.contentType) ||
+      // Code and tables that the browser shows as plain text
+      (['code', 'table'].includes(fileType?.kind) &&
+        document.body?.querySelector('pre'))
+    )
   ) {
     return
   }
@@ -114,7 +140,9 @@ function main(data: Data) {
     document.body.replaceChildren()
   }
   lifecycle.init(rawContainer)
-  mdRaw = directoryPage
+  mdRaw = viewedFileURL
+    ? ''
+    : directoryPage
     ? `# 📁 ${escapeMarkdown(
         getDirectoryName(window.location.href),
       )}\n\n${localize('folder_pick_file')}`
@@ -130,32 +158,66 @@ function main(data: Data) {
   const mdRenderer =
     (target: HTMLElement | Ele) =>
     (code: string = '', options?: MdOptions) => {
-      const source = codeLanguage ? toCodeFence(code, codeLanguage) : code
-      target.innerHTML = mdRender(source, {
-        theme: toTheme(configData.pageTheme),
-        plugins: configData.mdPlugins,
-        githubCompat: configData.githubCompat,
-        mermaidLook: configData.mermaidLook,
-        mermaidLayout: configData.mermaidLayout,
-        wikiLinkSourceURL: window.location.href,
-        wikiLinkRootURL: useConfiguredRoot ? configuredRootURL : undefined,
-        localize,
-        ...options,
-      })
       const ele = target instanceof Ele ? target.ele : target
-      if (useConfiguredRoot && configuredRootURL) {
-        void resolveWikiLinks(ele, configuredRootURL, localize)
+      const kind = fileType?.kind
+      if (kind === 'table') {
+        renderTable(ele, code, delimiter, localize, choice => {
+          delimiter = choice
+          contentRender(mdRaw)
+        })
+      } else if (kind === 'image' || kind === 'video' || kind === 'audio') {
+        // Re-rendering would restart a playing video.
+        if (!ele.querySelector(`.${className.MEDIA}`)) {
+          renderMedia(ele, fileURL, kind, fileName)
+        }
+      } else {
+        const source =
+          kind === 'code' ? toCodeFence(code, fileType.language) : code
+        target.innerHTML = mdRender(source, {
+          theme: toTheme(configData.pageTheme),
+          plugins: configData.mdPlugins,
+          githubCompat: configData.githubCompat,
+          mermaidLook: configData.mermaidLook,
+          mermaidLayout: configData.mermaidLayout,
+          wikiLinkSourceURL: window.location.href,
+          wikiLinkRootURL: useConfiguredRoot ? configuredRootURL : undefined,
+          localize,
+          ...options,
+        })
+        if (useConfiguredRoot && configuredRootURL) {
+          void resolveWikiLinks(ele, configuredRootURL, localize)
+        }
       }
       document.title =
         ele.querySelector('h1')?.textContent.trim() ??
-        (fileKind && fileKind !== 'markdown' ? fileName : '')
-      globalEvent.emit(
-        'contentRendered',
-        target instanceof Ele ? target.ele : target,
-      )
+        (fileType && fileType.kind !== 'markdown' ? fileName : '')
+      globalEvent.emit('contentRendered', ele)
     }
   const contentRender = mdRenderer(mdContent)
-  contentRender(mdRaw)
+  const kind = fileType?.kind
+  if (
+    viewedFileURL &&
+    kind !== 'image' &&
+    kind !== 'video' &&
+    kind !== 'audio'
+  ) {
+    renderStatus(mdContent.ele, localize('viewer_loading'))
+    fetchLocalText(viewedFileURL, localize).then(
+      text => {
+        mdRaw = text
+        contentRender(text)
+        renderSide()
+      },
+      error =>
+        renderStatus(
+          mdContent.ele,
+          `${localize('viewer_failed')}: ${error.message || error}`,
+          true,
+        ),
+    )
+  } else {
+    contentRender(mdRaw)
+  }
 
   mdContent.on(
     'click',
@@ -172,6 +234,19 @@ function main(data: Data) {
           localize,
         )
         if (resolved) window.location.href = resolved
+        return
+      }
+      // Opened directly, the browser would download a CSV file or show an
+      // image without md-reader.
+      const link = clicked.closest<HTMLAnchorElement>('a[href]')
+      const linkType =
+        link?.protocol === 'file:' && !link.target && getFileType(link.pathname)
+      if (linkType && opensInViewer(linkType)) {
+        e.preventDefault()
+        const url = new URL(link.href)
+        url.search = ''
+        url.hash = ''
+        window.location.href = getViewerURL(url.href)
         return
       }
       globalEvent.emit('click', e.target)
@@ -215,14 +290,13 @@ function main(data: Data) {
         void storage.set('folderPaneRatio', ratio)
       },
     )
-    const fallbackRootURL = directoryPage
-      ? window.location.href
-      : getParentDirectoryURL(window.location.href)
+    // The folder itself on a folder page, which may carry a ?view= query
+    const fallbackRootURL = getParentDirectoryURL(window.location.href)
     const rootURL = useConfiguredRoot ? configuredRootURL : fallbackRootURL
     void renderFolderBrowser({
       container: folderBrowser.ele,
       rootURL,
-      currentURL: window.location.href,
+      currentURL: fileURL,
       initialHTML:
         directoryPage && isSameLocalURL(rootURL, window.location.href)
           ? directoryHTML

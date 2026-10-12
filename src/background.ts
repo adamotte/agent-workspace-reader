@@ -1,6 +1,6 @@
 import storage from '@/core/storage'
 import commands from '@/core/commands'
-import { getFileKind, hasKnownExtension } from '@/core/file-types'
+import { getFileType, hasKnownExtension } from '@/core/file-types'
 
 const VAULT_INDEX_TTL = 5 * 60 * 1000
 interface NativeFolderEntry {
@@ -178,7 +178,7 @@ function parseNativeDirectoryEntries(
       if (isDirectory && (name.startsWith('.') || name === 'node_modules')) {
         continue
       }
-      if (!isDirectory && !getFileKind(name)) continue
+      if (!isDirectory && !getFileType(name)) continue
       entries.push({ name, url: url.href, isDirectory })
     } catch {
       // Ignore malformed browser-generated rows.
@@ -284,10 +284,20 @@ async function fetchLocalURL(url?: string, senderURL?: string) {
     if (!response.ok && response.status !== 0) {
       throw new Error(`Read failed with status ${response.status}.`)
     }
-    return { ok: true, text: await response.text() }
+    return { ok: true, text: decodeText(await response.arrayBuffer()) }
   } catch (error) {
     console.error(error)
     return { ok: false, error: error.message || String(error) }
+  }
+}
+
+// UTF-8, or Windows-1252 for files that aren't valid UTF-8, such as CSV
+// files that Excel saves with a French locale.
+function decodeText(buffer: ArrayBuffer): string {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer)
+  } catch {
+    return new TextDecoder('windows-1252').decode(buffer)
   }
 }
 
