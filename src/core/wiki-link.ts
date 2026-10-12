@@ -11,10 +11,13 @@ interface ResolveWikiLinksResponse {
 
 const resolvedLinks = new Map<string, string>()
 
+// sourceURL is the file the links are in, which a folder page shows; see
+// getViewerURL.
 export async function resolveWikiLinks(
   container: ParentNode,
   rootURL: string,
   localize: Localize = i18n(),
+  sourceURL: string = window.location.href,
 ): Promise<void> {
   const links = Array.from(
     container.querySelectorAll<HTMLAnchorElement>(
@@ -26,7 +29,7 @@ export async function resolveWikiLinks(
   const targets = Array.from(
     new Set(links.map(link => link.dataset.wikiTarget).filter(Boolean)),
   )
-  const resolved = await requestResolvedLinks(targets, rootURL)
+  const resolved = await requestResolvedLinks(targets, rootURL, sourceURL)
   links.forEach(link => applyResolvedLink(link, resolved, localize))
 }
 
@@ -34,18 +37,19 @@ export async function resolveWikiLink(
   link: HTMLAnchorElement,
   rootURL: string,
   localize: Localize = i18n(),
+  sourceURL: string = window.location.href,
 ): Promise<string | undefined> {
   const target = link.dataset.wikiTarget
   if (!target) return undefined
 
-  const cacheKey = getCacheKey(rootURL, target)
+  const cacheKey = getCacheKey(rootURL, sourceURL, target)
   const cached = resolvedLinks.get(cacheKey)
   if (cached) {
     applyResolvedLink(link, { [target]: cached }, localize)
     return cached
   }
 
-  const resolved = await requestResolvedLinks([target], rootURL)
+  const resolved = await requestResolvedLinks([target], rootURL, sourceURL)
   applyResolvedLink(link, resolved, localize)
   return resolved[target]
 }
@@ -53,13 +57,17 @@ export async function resolveWikiLink(
 function requestResolvedLinks(
   targets: string[],
   rootURL: string,
+  sourceURL: string,
 ): Promise<Record<string, string>> {
   const missing = targets.filter(
-    target => !resolvedLinks.has(getCacheKey(rootURL, target)),
+    target => !resolvedLinks.has(getCacheKey(rootURL, sourceURL, target)),
   )
   const cached = Object.fromEntries(
     targets
-      .map(target => [target, resolvedLinks.get(getCacheKey(rootURL, target))])
+      .map(target => [
+        target,
+        resolvedLinks.get(getCacheKey(rootURL, sourceURL, target)),
+      ])
       .filter(([, url]) => Boolean(url)),
   )
   if (!missing.length) return Promise.resolve(cached)
@@ -69,7 +77,7 @@ function requestResolvedLinks(
       chrome.runtime.sendMessage(
         {
           action: 'resolveWikiLinks',
-          data: { rootURL, targets: missing },
+          data: { rootURL, sourceURL, targets: missing },
         },
         (response: ResolveWikiLinksResponse) => {
           if (chrome.runtime.lastError || !response?.ok) {
@@ -78,7 +86,7 @@ function requestResolvedLinks(
           }
           const links = response.links || {}
           Object.entries(links).forEach(([target, url]) => {
-            resolvedLinks.set(getCacheKey(rootURL, target), url)
+            resolvedLinks.set(getCacheKey(rootURL, sourceURL, target), url)
           })
           resolve({ ...cached, ...links })
         },
@@ -106,6 +114,10 @@ function applyResolvedLink(
   link.removeAttribute('data-wiki-unresolved')
 }
 
-function getCacheKey(rootURL: string, target: string): string {
-  return `${rootURL}\n${window.location.href}\n${target}`
+function getCacheKey(
+  rootURL: string,
+  sourceURL: string,
+  target: string,
+): string {
+  return `${rootURL}\n${sourceURL}\n${target}`
 }

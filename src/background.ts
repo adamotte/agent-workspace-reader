@@ -51,19 +51,25 @@ async function resolveWikiLinkTargets(data: any, senderURL?: string) {
     if (!rootURL || !senderURL || !isURLWithinRoot(senderURL, rootURL)) {
       throw new Error('WikiLink resolution must stay inside the local root.')
     }
+    // The file the links are in, which a folder page shows
+    const sourceURL =
+      typeof data?.sourceURL === 'string' &&
+      isURLWithinRoot(data.sourceURL, rootURL)
+        ? data.sourceURL
+        : senderURL
     const targets = Array.isArray(data?.targets)
       ? data.targets.filter(target => typeof target === 'string')
       : []
     const fileNames = targets.map(
       target => splitWikiLinkTarget(target).fileName,
     )
-    const candidatesByName = await findVaultFiles(rootURL, fileNames, senderURL)
+    const candidatesByName = await findVaultFiles(rootURL, fileNames, sourceURL)
     const links: Record<string, string> = {}
     for (const target of targets) {
       const { fileName, heading } = splitWikiLinkTarget(target)
       const candidates =
         candidatesByName.get(fileName.toLocaleLowerCase('zh-CN')) || []
-      const selected = selectNearestCandidate(candidates, senderURL)
+      const selected = selectNearestCandidate(candidates, sourceURL)
       if (!selected) continue
       const url = new URL(selected)
       if (heading) url.hash = normalizeHeading(heading)

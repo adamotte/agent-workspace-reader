@@ -9,6 +9,7 @@ import {
   opensInViewer,
   type FileType,
 } from '@/core/file-types'
+import { decodeURLPath, getViewerURL, isURLWithinRoot } from '@/core/view-url'
 
 type Localize = ReturnType<typeof i18n>
 
@@ -37,6 +38,16 @@ interface FolderBrowserOptions {
   localize?: Localize
 }
 
+export interface FolderBrowser {
+  // Highlights the file now shown, opening the folders that hold it.
+  setCurrentURL(url?: string): void
+}
+
+// Folders loaded later still highlight the file shown at that time.
+interface TreeState {
+  currentURL?: string
+}
+
 export function isLocalDirectoryPage(
   url: string = window.location.href,
   contentType: string = document.contentType,
@@ -47,40 +58,6 @@ export function isLocalDirectoryPage(
     parsed.pathname.endsWith('/') &&
     contentType === 'text/html'
   )
-}
-
-export function getParentDirectoryURL(url: string): string {
-  return new URL('./', url).href
-}
-
-// The folder page shows a file of the folder through md-reader when its URL
-// names it in this query parameter; see opensInViewer.
-const VIEW_PARAM = 'view'
-
-export function getViewerURL(fileURL: string): string {
-  const folderURL = getParentDirectoryURL(fileURL)
-  const name = fileURL.slice(folderURL.length)
-  return `${folderURL}?${VIEW_PARAM}=${encodeURIComponent(name)}`
-}
-
-export function getViewedFileURL(pageURL: string): string | undefined {
-  const page = new URL(pageURL)
-  const name = page.searchParams.get(VIEW_PARAM)
-  if (!name) return undefined
-  page.search = ''
-  page.hash = ''
-  try {
-    const file = new URL(name, page)
-    // Only a file directly inside this folder
-    const inFolder =
-      !file.search &&
-      !file.hash &&
-      !file.pathname.endsWith('/') &&
-      getParentDirectoryURL(file.href) === page.href
-    return inFolder ? file.href : undefined
-  } catch {
-    return undefined
-  }
 }
 
 export function normalizeFolderRootURL(value?: string): string | undefined {
@@ -103,20 +80,6 @@ export function normalizeFolderRootURL(value?: string): string | undefined {
     return url.href
   } catch {
     return undefined
-  }
-}
-
-export function isURLWithinRoot(url: string, rootURL: string): boolean {
-  try {
-    const target = new URL(url)
-    const root = new URL(rootURL)
-    return (
-      target.protocol === root.protocol &&
-      target.host === root.host &&
-      decodeURLPath(target).startsWith(decodeURLPath(root))
-    )
-  } catch {
-    return false
   }
 }
 
@@ -248,7 +211,7 @@ export function parseDirectoryEntries(
   )
 }
 
-export async function renderFolderBrowser({
+export function renderFolderBrowser({
   container,
   rootURL,
   currentURL,
@@ -257,8 +220,9 @@ export async function renderFolderBrowser({
   sortOrder = 'name-desc',
   onSortOrderChange,
   localize = i18n(),
-}: FolderBrowserOptions): Promise<void> {
+}: FolderBrowserOptions): FolderBrowser {
   container.replaceChildren()
+  const state: TreeState = { currentURL }
   let activeSortOrder = normalizeFolderSortOrder(sortOrder)
 
   const header = document.createElement('div')
@@ -303,54 +267,75 @@ export async function renderFolderBrowser({
   status.textContent = localize('folder_loading')
   container.append(header, status, tree)
 
-  try {
-    const html = initialHTML ?? (await fetchLocalText(rootURL, localize))
-    let renderVersion = 0
-    const renderTree = async () => {
-      const version = ++renderVersion
-      const entries = parseDirectoryEntries(html, rootURL, activeSortOrder)
-      const nextTree = document.createElement('ul')
-      await renderEntries(
-        nextTree,
-        entries,
-        currentURL,
-        activeSortOrder,
-        localize,
-      )
-      if (version !== renderVersion) return
+  void (async () => {
+    try {
+      const html = initialHTML ?? (await fetchLocalText(rootURL, localize))
+      let renderVersion = 0
+      const renderTree = async () => {
+        const version = ++renderVersion
+        const entries = parseDirectoryEntries(html, rootURL, activeSortOrder)
+        const nextTree = document.createElement('ul')
+        await renderEntries(nextTree, entries, state, activeSortOrder, localize)
+        if (version !== renderVersion) return
 
-      tree.replaceChildren(...Array.from(nextTree.childNodes))
-      status.remove()
-      requestAnimationFrame(() => {
-        tree
-          .querySelector(`.${className.FOLDER_FILE_ACTIVE}`)
-          ?.scrollIntoView({ block: 'nearest' })
-      })
-      if (!entries.length) {
-        status.textContent = localize('folder_empty')
-        container.insertBefore(status, tree)
+        tree.replaceChildren(...Array.from(nextTree.childNodes))
+        status.remove()
+        requestAnimationFrame(() => {
+          tree
+            .querySelector(`.${className.FOLDER_FILE_ACTIVE}`)
+            ?.scrollIntoView({ block: 'nearest' })
+        })
+        if (!entries.length) {
+          status.textContent = localize('folder_empty')
+          container.insertBefore(status, tree)
+        }
       }
-    }
 
-    sortSelect.addEventListener('change', () => {
-      activeSortOrder = normalizeFolderSortOrder(sortSelect.value)
-      updateSortControlTitle(sortControl, activeSortOrder, localize)
-      onSortOrderChange?.(activeSortOrder)
-      void renderTree()
-    })
-    await renderTree()
-  } catch (error) {
-    status.classList.add(className.FOLDER_STATUS_ERROR)
-    status.textContent = `${localize('folder_read_failed')}: ${
-      error.message || error
-    }`
+      sortSelect.addEventListener('change', () => {
+        activeSortOrder = normalizeFolderSortOrder(sortSelect.value)
+        updateSortControlTitle(sortControl, activeSortOrder, localize)
+        onSortOrderChange?.(activeSortOrder)
+        void renderTree()
+      })
+      await renderTree()
+    } catch (error) {
+      status.classList.add(className.FOLDER_STATUS_ERROR)
+      status.textContent = `${localize('folder_read_failed')}: ${
+        error.message || error
+      }`
+    }
+  })()
+
+  return {
+    setCurrentURL(url) {
+      state.currentURL = url
+      markCurrentFile(tree, url)
+    },
   }
+}
+
+function markCurrentFile(tree: HTMLElement, url?: string) {
+  tree
+    .querySelectorAll(`.${className.FOLDER_FILE_ACTIVE}`)
+    .forEach(link => link.classList.remove(className.FOLDER_FILE_ACTIVE))
+  if (!url) return
+  // Opening a folder loads it, highlighting the file if it holds it.
+  tree.querySelectorAll<HTMLDetailsElement>('details').forEach(details => {
+    if (!details.open && isURLWithinRoot(url, details.dataset.url)) {
+      details.open = true
+    }
+  })
+  const link = Array.from(
+    tree.querySelectorAll<HTMLAnchorElement>('a[data-file-url]'),
+  ).find(link => sameFileURL(link.dataset.fileUrl, url))
+  link?.classList.add(className.FOLDER_FILE_ACTIVE)
+  link?.scrollIntoView({ block: 'nearest' })
 }
 
 async function renderEntries(
   list: HTMLUListElement,
   entries: FolderEntry[],
-  currentURL?: string,
+  state: TreeState,
   sortOrder: FolderSortOrder = 'name-desc',
   localize: Localize = i18n(),
 ): Promise<void> {
@@ -367,6 +352,7 @@ async function renderEntries(
         folderName(entry.name),
       )
       summary.title = entry.url
+      details.dataset.url = entry.url
       const children = document.createElement('ul')
       details.append(summary, children)
       let loadPromise: Promise<void> | undefined
@@ -384,7 +370,7 @@ async function renderEntries(
             await renderEntries(
               children,
               childEntries,
-              currentURL,
+              state,
               sortOrder,
               localize,
             )
@@ -411,7 +397,7 @@ async function renderEntries(
       item.append(details)
       list.append(item)
 
-      if (currentURL && isURLWithinRoot(currentURL, entry.url)) {
+      if (state.currentURL && isURLWithinRoot(state.currentURL, entry.url)) {
         details.open = true
         await loadChildren()
       }
@@ -421,6 +407,7 @@ async function renderEntries(
         ? getViewerURL(entry.url)
         : entry.url
       link.title = entry.name
+      link.dataset.fileUrl = entry.url
       link.append(
         folderIcon(entry.type.icon),
         folderName(getDisplayName(entry.name), getHiddenExtension(entry.name)),
@@ -430,7 +417,7 @@ async function renderEntries(
         link.target = '_blank'
         link.rel = 'noopener'
       }
-      if (sameFileURL(entry.url, currentURL)) {
+      if (sameFileURL(entry.url, state.currentURL)) {
         link.classList.add(className.FOLDER_FILE_ACTIVE)
       }
       item.append(link)
@@ -536,12 +523,4 @@ function sameFileURL(left: string, right?: string): boolean {
 function normalizeURL(url: string): string {
   const parsed = new URL(url)
   return `${parsed.protocol}//${parsed.host}${decodeURLPath(parsed)}`
-}
-
-function decodeURLPath(url: URL): string {
-  try {
-    return decodeURIComponent(url.pathname)
-  } catch {
-    return url.pathname
-  }
 }

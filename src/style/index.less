@@ -1,6 +1,22 @@
 @import url('./variable.less');
 @side-width: 260px;
 
+// Until the reader has rendered the page, hide what the browser shows of the
+// raw file or folder listing, so that it doesn't flash on each page load. If
+// the reader never takes over, the page shows after a moment anyway.
+html:not(.md-reader-ready) {
+  background: var(--color-bg);
+  > body {
+    visibility: hidden;
+    animation: md-reader-reveal 0s 1s forwards;
+  }
+}
+@keyframes md-reader-reveal {
+  to {
+    visibility: visible;
+  }
+}
+
 body.md-reader {
   margin: 0;
   padding: 0;
@@ -55,6 +71,59 @@ body.md-reader {
         min-height: 96px;
         overflow: auto;
         padding-bottom: 24px;
+      }
+      .md-reader__outline-toggle {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        width: 100%;
+        margin: 0;
+        padding: 4px 14px 8px 15px;
+        border: none;
+        background: none;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        text-align: left;
+        &:hover {
+          color: var(--color-primary);
+        }
+        &[aria-expanded='true'] .md-reader__outline-chevron {
+          transform: rotate(90deg);
+        }
+      }
+      .md-reader__outline-chevron {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        color: var(--color-side);
+        transition: transform 0.15s;
+      }
+      .md-reader__outline-count {
+        margin-left: auto;
+        color: var(--color-side);
+        font-size: 12px;
+        font-weight: normal;
+      }
+      .md-reader__outline-empty {
+        padding: 0.3em 1.6em;
+        color: var(--color-side);
+      }
+      // The folder tree takes the whole panel above the outline's title.
+      &--outline-collapsed {
+        .md-reader__folder-browser {
+          flex-grow: 1;
+        }
+        .md-reader__folder-resizer,
+        .md-reader__outline {
+          display: none;
+        }
+        .md-reader__outline-toggle {
+          padding-top: 10px;
+          border-top: 1px solid var(--color-side-border);
+        }
       }
       li {
         &.md-reader__side-li--active {

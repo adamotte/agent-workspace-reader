@@ -9,10 +9,17 @@ import i18n from '@/config/i18n'
 import type { Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
-import { getFileType, opensInViewer } from '@/core/file-types'
+import { createIcon } from '@/core/file-icons'
+import {
+  getFileType,
+  opensInViewer,
+  type FileKind,
+  type FileType,
+} from '@/core/file-types'
 import { decodeHash, legacySlug, slugify } from '@/core/slug'
 import { resolveWikiLink, resolveWikiLinks } from '@/core/wiki-link'
 import {
+  rebaseRelativeURLs,
   renderMedia,
   renderStatus,
   renderTable,
@@ -21,15 +28,18 @@ import {
 import {
   fetchLocalText,
   getDirectoryName,
+  isSameLocalURL,
+  isLocalDirectoryPage,
+  normalizeFolderRootURL,
+  renderFolderBrowser,
+  type FolderBrowser,
+} from '@/core/folder'
+import {
   getParentDirectoryURL,
   getViewedFileURL,
   getViewerURL,
-  isSameLocalURL,
-  isLocalDirectoryPage,
   isURLWithinRoot,
-  normalizeFolderRootURL,
-  renderFolderBrowser,
-} from '@/core/folder'
+} from '@/core/view-url'
 import {
   getHeads,
   getRawContainer,
@@ -48,23 +58,27 @@ function main(data: Data) {
   const configData = getDefaultData(data)
   const localize = i18n(configData.language)
   const directoryPage = isLocalDirectoryPage()
+  // The folder itself on a folder page, which may carry a ?view= query
+  const pageFolderURL = getParentDirectoryURL(window.location.href)
   const viewedURL = directoryPage
     ? getViewedFileURL(window.location.href)
     : undefined
   const viewedType = viewedURL && getFileType(viewedURL)
-  // A folder page can show one of its files; see getViewerURL.
-  const viewedFileURL = viewedType ? viewedURL : undefined
-  const fileURL = viewedFileURL ?? window.location.href
-  const fileName = getDirectoryName(fileURL)
-  const fileType =
-    directoryPage && !viewedFileURL ? undefined : getFileType(fileName)
   let delimiter: DelimiterChoice = 'auto'
+  // A folder page can show any file under it, and switch files in place;
+  // see getViewerURL and openFile.
+  let viewedFileURL: string | undefined
+  let fileURL: string
+  let fileName: string
+  let fileType: FileType | undefined
+  setFile(viewedType ? viewedURL : undefined)
   const localPage = window.location.protocol === 'file:'
   const configuredRootURL = normalizeFolderRootURL(configData.folderRootPath)
   const useConfiguredRoot = Boolean(
     configuredRootURL &&
       isURLWithinRoot(window.location.href, configuredRootURL),
   )
+  const rootURL = useConfiguredRoot ? configuredRootURL : pageFolderURL
   const directoryHTML = directoryPage
     ? document.documentElement.outerHTML
     : null
@@ -88,7 +102,7 @@ function main(data: Data) {
     },
     toggleRefresh(value) {
       clearTimeout(pollingTimer)
-      value && !directoryPage && polling()
+      value && polling()
     },
     toggleCentered(value) {
       mdContent.classList.toggle('centered', value)
@@ -120,10 +134,13 @@ function main(data: Data) {
         document.body?.querySelector('pre'))
     )
   ) {
+    reveal()
     return
   }
 
   let pollingTimer: number = null
+  // Counts files shown, so that a slow read can't replace a later file
+  let showing = 0
   let reloading: boolean = false
   let mdRaw: string = null
   let isSideHover: boolean = false
@@ -142,17 +159,16 @@ function main(data: Data) {
     configData.showExtensions,
   )
 
-  const rawContainer = directoryPage ? null : getRawContainer()
+  // A folder page has no raw text of its own; this holds the shown file's.
+  const rawContainer = directoryPage ? createRawContainer() : getRawContainer()
   if (directoryPage) {
-    document.body.replaceChildren()
+    document.body.replaceChildren(rawContainer)
   }
   lifecycle.init(rawContainer)
   mdRaw = viewedFileURL
     ? ''
     : directoryPage
-    ? `# 📁 ${escapeMarkdown(
-        getDirectoryName(window.location.href),
-      )}\n\n${localize('folder_pick_file')}`
+    ? getFolderIndex()
     : rawContainer?.textContent
 
   /* render content */
@@ -172,7 +188,7 @@ function main(data: Data) {
           delimiter = choice
           contentRender(mdRaw)
         })
-      } else if (kind === 'image' || kind === 'video' || kind === 'audio') {
+      } else if (isMedia(kind)) {
         // Re-rendering would restart a playing video.
         if (!ele.querySelector(`.${className.MEDIA}`)) {
           renderMedia(ele, fileURL, kind, fileName)
@@ -180,19 +196,29 @@ function main(data: Data) {
       } else {
         const source =
           kind === 'code' ? toCodeFence(code, fileType.language) : code
-        target.innerHTML = mdRender(source, {
+        const html = mdRender(source, {
           theme: toTheme(configData.pageTheme),
           plugins: configData.mdPlugins,
           githubCompat: configData.githubCompat,
           mermaidLook: configData.mermaidLook,
           mermaidLayout: configData.mermaidLayout,
-          wikiLinkSourceURL: window.location.href,
+          wikiLinkSourceURL: fileURL,
           wikiLinkRootURL: useConfiguredRoot ? configuredRootURL : undefined,
           localize,
           ...options,
         })
+        if (viewedFileURL) {
+          // Parsed in an inert template, so that nothing loads from the
+          // page's folder before the URLs point at the file's.
+          const template = document.createElement('template')
+          template.innerHTML = html
+          rebaseRelativeURLs(template.content, fileURL)
+          ele.replaceChildren(template.content)
+        } else {
+          target.innerHTML = html
+        }
         if (useConfiguredRoot && configuredRootURL) {
-          void resolveWikiLinks(ele, configuredRootURL, localize)
+          void resolveWikiLinks(ele, configuredRootURL, localize, fileURL)
         }
       }
       document.title =
@@ -201,29 +227,12 @@ function main(data: Data) {
       globalEvent.emit('contentRendered', ele)
     }
   const contentRender = mdRenderer(mdContent)
-  const kind = fileType?.kind
-  if (
-    viewedFileURL &&
-    kind !== 'image' &&
-    kind !== 'video' &&
-    kind !== 'audio'
-  ) {
-    renderStatus(mdContent.ele, localize('viewer_loading'))
-    fetchLocalText(viewedFileURL, localize).then(
-      text => {
-        mdRaw = text
-        contentRender(text)
-        renderSide()
-      },
-      error =>
-        renderStatus(
-          mdContent.ele,
-          `${localize('viewer_failed')}: ${error.message || error}`,
-          true,
-        ),
-    )
-  } else {
+  // A file shown on a folder page is read once the page is set up; see
+  // showFile.
+  if (!viewedFileURL) {
     contentRender(mdRaw)
+  } else if (!isMedia(fileType.kind)) {
+    renderStatus(mdContent.ele, localize('viewer_loading'))
   }
 
   mdContent.on(
@@ -239,21 +248,24 @@ function main(data: Data) {
           unresolvedLink,
           configuredRootURL,
           localize,
+          fileURL,
         )
-        if (resolved) window.location.href = resolved
+        if (resolved) openFile(resolved)
         return
       }
       // Opened directly, the browser would download a CSV file or show an
-      // image without md-reader.
+      // image without md-reader. Other files can open in a new tab as they
+      // are.
       const link = clicked.closest<HTMLAnchorElement>('a[href]')
       const linkType =
         link?.protocol === 'file:' && !link.target && getFileType(link.pathname)
-      if (linkType && opensInViewer(linkType)) {
+      if (
+        linkType &&
+        linkType.kind !== 'native' &&
+        (opensInViewer(linkType) || !isModifiedClick(e))
+      ) {
         e.preventDefault()
-        const url = new URL(link.href)
-        url.search = ''
-        url.hash = ''
-        window.location.href = getViewerURL(url.href)
+        openFile(link.href)
         return
       }
       globalEvent.emit('click', e.target)
@@ -270,10 +282,12 @@ function main(data: Data) {
   /* render side */
   const mdOutline = new Ele<HTMLElement>('ul', {
     className: className.MD_OUTLINE,
+    id: OUTLINE_ID,
   })
   const mdSide = new Ele<HTMLElement>('aside', {
     className: className.MD_SIDE,
   })
+  let folderView: FolderBrowser | undefined
   if (localPage) {
     const folderBrowser = new Ele<HTMLElement>('nav', {
       className: className.FOLDER_BROWSER,
@@ -297,10 +311,7 @@ function main(data: Data) {
         void storage.set('folderPaneRatio', ratio)
       },
     )
-    // The folder itself on a folder page, which may carry a ?view= query
-    const fallbackRootURL = getParentDirectoryURL(window.location.href)
-    const rootURL = useConfiguredRoot ? configuredRootURL : fallbackRootURL
-    void renderFolderBrowser({
+    folderView = renderFolderBrowser({
       container: folderBrowser.ele,
       rootURL,
       currentURL: fileURL,
@@ -316,8 +327,42 @@ function main(data: Data) {
       },
       localize,
     })
+    folderBrowser.on('click', (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest<HTMLAnchorElement>(
+        'a[data-file-url]',
+      )
+      if (!link || link.target || isModifiedClick(e)) return
+      e.preventDefault()
+      openFile(link.dataset.fileUrl)
+    })
   }
-  mdSide.append(mdOutline)
+
+  /* render outline toggle */
+  const outlineLabel = new Ele<HTMLElement>('span')
+  outlineLabel.textContent = localize('outline')
+  const outlineCount = new Ele<HTMLElement>('span', {
+    className: className.OUTLINE_COUNT,
+  })
+  const outlineToggle = new Ele<HTMLElement>(
+    'button',
+    {
+      className: className.OUTLINE_TOGGLE,
+      type: 'button',
+      title: localize('outline_toggle'),
+      'aria-controls': OUTLINE_ID,
+    },
+    [
+      createIcon('chevron', className.OUTLINE_CHEVRON),
+      outlineLabel,
+      outlineCount,
+    ],
+  )
+  outlineToggle.on('click', () => {
+    configData.outlineExpanded = !configData.outlineExpanded
+    applyOutlineExpanded()
+    void storage.set('outlineExpanded', configData.outlineExpanded)
+  })
+  mdSide.append([outlineToggle, mdOutline])
   const sideResizer = new Ele<HTMLElement>('div', {
     className: className.SIDE_RESIZER,
     role: 'separator',
@@ -344,22 +389,22 @@ function main(data: Data) {
   })
 
   renderSide()
+  applyOutlineExpanded()
   document.addEventListener('scroll', throttle(onScroll, 100))
 
   /* render raw toggle button */
-  const rawToggleBtn = directoryPage
-    ? null
-    : new Ele<HTMLElement>(
-        'button',
-        {
-          className: [className.MD_BUTTON, className.CODE_TOGGLE_BTN],
-          title: localize('title_toggle-raw'),
-        },
-        svg(codeIcon),
-      )
-  rawToggleBtn?.on('click', () => {
+  const rawToggleBtn = new Ele<HTMLElement>(
+    'button',
+    {
+      className: [className.MD_BUTTON, className.CODE_TOGGLE_BTN],
+      title: localize('title_toggle-raw'),
+    },
+    svg(codeIcon),
+  )
+  rawToggleBtn.on('click', () => {
     lifecycle.toggleRaw([mdBody, mdSide])
   })
+  rawToggleBtn.toggle(Boolean(viewedFileURL) || !directoryPage)
 
   /* render side expand button */
   const sideExpandBtn = new Ele<HTMLElement>(
@@ -425,12 +470,33 @@ function main(data: Data) {
   const buttonWrap = new Ele<HTMLElement>(
     'div',
     { className: className.BUTTON_WRAP_ELE },
-    [sideExpandBtn, rawToggleBtn, goTopBtn].filter(Boolean),
+    [sideExpandBtn, rawToggleBtn, goTopBtn],
   )
 
   /* mount elements */
   lifecycle.mount([buttonWrap, mdBody, mdSide])
-  updateAnchorPosition()
+  if (viewedFileURL) {
+    void showFile(viewedFileURL, history.state?.scrollY).then(reveal)
+  } else {
+    updateAnchorPosition()
+    reveal()
+  }
+
+  if (directoryPage) {
+    window.addEventListener('popstate', (e: PopStateEvent) => {
+      const url = getViewedFile()
+      // Only the fragment changed, which the browser handles.
+      if (
+        url === viewedFileURL ||
+        (url && viewedFileURL && isSameLocalURL(url, viewedFileURL))
+      ) {
+        return
+      }
+      void showFile(url, e.state?.scrollY)
+    })
+    // Lets a reload come back to the same place in the file.
+    window.addEventListener('pagehide', saveScroll)
+  }
 
   darkMediaQuery.addEventListener('change', (e: MediaQueryListEvent) => {
     if (configData.pageTheme === 'auto') {
@@ -442,33 +508,158 @@ function main(data: Data) {
   })
 
   /* auto refresh */
-  if (configData.refresh && !directoryPage) {
+  if (configData.refresh) {
     polling()
   }
 
   function polling() {
-    void (function watch() {
+    void (async function watch() {
       clearTimeout(pollingTimer)
-      chrome.runtime.sendMessage({ action: 'fetch' }, res => {
-        if (res !== undefined) {
-          if (mdRaw === undefined || mdRaw === null) {
-            if (res) {
-              window.location.reload()
-              return
-            }
-          } else if (mdRaw !== res) {
-            mdRaw = res
-            contentRender(res)
-            renderSide()
-            /* update raw content */
-            setTimeout(() => {
-              rawContainer.textContent = res
-            }, 0)
+      const url = viewedFileURL
+      const res = await readShownFile()
+      // Unless another file is shown by now
+      if (res !== undefined && url === viewedFileURL) {
+        if ((mdRaw === undefined || mdRaw === null) && !directoryPage) {
+          if (res) {
+            window.location.reload()
+            return
           }
+        } else if (mdRaw !== res) {
+          mdRaw = res
+          contentRender(res)
+          renderSide()
+          /* update raw content */
+          setTimeout(() => {
+            if (rawContainer) rawContainer.textContent = res
+          }, 0)
         }
-        pollingTimer = setTimeout(watch, 500)
-      })
+      }
+      if (configData.refresh) pollingTimer = setTimeout(watch, 500)
     })()
+  }
+
+  // The shown file's text, or undefined when there is none to watch
+  function readShownFile(): Promise<string | undefined> {
+    if (!directoryPage) {
+      return new Promise(resolve =>
+        chrome.runtime.sendMessage({ action: 'fetch' }, resolve),
+      )
+    }
+    if (!viewedFileURL || isMedia(fileType.kind)) {
+      return Promise.resolve(undefined)
+    }
+    return fetchLocalText(viewedFileURL, localize).catch(() => undefined)
+  }
+
+  // The file shown, or none on a folder page that shows no file
+  function setFile(url?: string) {
+    viewedFileURL = url
+    fileURL = url ?? window.location.href
+    fileName = getDirectoryName(fileURL)
+    fileType = directoryPage && !url ? undefined : getFileType(fileName)
+    delimiter = 'auto'
+  }
+
+  function getViewedFile(): string | undefined {
+    const url = getViewedFileURL(window.location.href)
+    const type = url && getFileType(url)
+    return type && type.kind !== 'native' ? url : undefined
+  }
+
+  function getFolderIndex(): string {
+    return `# 📁 ${escapeMarkdown(
+      getDirectoryName(window.location.href),
+    )}\n\n${localize('folder_pick_file')}`
+  }
+
+  // A file under this folder page opens in place: the side panel stays as it
+  // is, and nothing flashes as on a reload. Another file opens on the folder
+  // page of the tree, or of its own folder, from where the next ones open in
+  // place.
+  function openFile(url: string) {
+    const target = new URL(url)
+    const { hash } = target
+    target.search = ''
+    target.hash = ''
+    const type = getFileType(target.pathname)
+    if (!type || type.kind === 'native') {
+      window.location.href = url
+      return
+    }
+    // The History API keeps a file: page on its path.
+    if (!directoryPage || !target.href.startsWith(pageFolderURL)) {
+      const folderURL = target.href.startsWith(rootURL) ? rootURL : undefined
+      window.location.href = getViewerURL(target.href, folderURL) + hash
+      return
+    }
+    const pageURL = getViewerURL(target.href, pageFolderURL) + hash
+    if (viewedFileURL && isSameLocalURL(target.href, viewedFileURL)) {
+      if (pageURL !== window.location.href) {
+        history.pushState(null, '', pageURL)
+      }
+      scrollToHash()
+      return
+    }
+    saveScroll()
+    history.pushState(null, '', pageURL)
+    void showFile(target.href)
+  }
+
+  // Shows a file of this folder page, or the folder itself without one.
+  async function showFile(url: string | undefined, scrollY?: number) {
+    const current = ++showing
+    const type = url && getFileType(url)
+    let text = ''
+    let error: Error | undefined
+    if (type && !isMedia(type.kind)) {
+      try {
+        text = await fetchLocalText(url, localize)
+      } catch (e) {
+        error = e
+      }
+      if (current !== showing) return
+    }
+    setFile(url)
+    // Also drops the last file's media; see mdRenderer.
+    mdContent.ele.replaceChildren()
+    if (error) {
+      mdRaw = null
+      renderStatus(
+        mdContent.ele,
+        `${localize('viewer_failed')}: ${error.message || error}`,
+        true,
+      )
+      document.title = fileName
+    } else {
+      mdRaw = url ? text : getFolderIndex()
+      contentRender(mdRaw)
+    }
+    rawContainer.textContent = mdRaw ?? ''
+    rawToggleBtn.toggle(Boolean(url))
+    renderSide()
+    folderView?.setCurrentURL(fileURL)
+    scrollToHash(scrollY)
+  }
+
+  function saveScroll() {
+    history.replaceState({ ...history.state, scrollY: window.scrollY }, '')
+  }
+
+  function scrollToHash(scrollY = 0) {
+    if (findHashTarget()) {
+      updateAnchorPosition()
+    } else {
+      window.scrollTo(0, scrollY)
+    }
+  }
+
+  function applyOutlineExpanded() {
+    const expanded = configData.outlineExpanded
+    mdSide.classList.toggle(className.OUTLINE_COLLAPSED, !expanded)
+    outlineToggle.ele.setAttribute('aria-expanded', String(expanded))
+    if (expanded) {
+      sideLiElements[targetIndex]?.scrollIntoView({ block: 'nearest' })
+    }
   }
 
   function renderSide() {
@@ -476,6 +667,17 @@ function main(data: Data) {
     headElements = getHeads(mdContent)
     df = new Ele<DocumentFragment>('#document-fragment')
     sideLiElements = headElements.reduce(handleHeadItem, [])
+    targetIndex = null
+    if (!headElements.length) {
+      const empty = new Ele<HTMLElement>('li', {
+        className: className.OUTLINE_EMPTY,
+      })
+      empty.textContent = localize('outline_empty')
+      df.append(empty)
+    }
+    outlineCount.textContent = headElements.length
+      ? String(headElements.length)
+      : ''
     mdOutline.innerHTML = null
     mdOutline.append(df)
     setTimeout(onScroll, 0)
@@ -600,6 +802,31 @@ function main(data: Data) {
     events.forEach(e => window.addEventListener(e, stop, { passive: true }))
     setTimeout(stop, 10000)
   }
+}
+
+const OUTLINE_ID = 'md-reader-outline'
+
+// Until then the page hides what the browser shows of the raw file or folder
+// listing; see md-reader-ready in index.less.
+function reveal() {
+  document.documentElement.classList.add(className.READY)
+}
+
+function createRawContainer(): HTMLElement {
+  const pre = document.createElement('pre')
+  // As the browser shows a text file
+  pre.style.whiteSpace = 'pre-wrap'
+  pre.style.overflowWrap = 'break-word'
+  return pre
+}
+
+function isMedia(kind?: FileKind): kind is 'image' | 'video' | 'audio' {
+  return kind === 'image' || kind === 'video' || kind === 'audio'
+}
+
+// A click that opens the link elsewhere, such as in a new tab
+function isModifiedClick(e: MouseEvent): boolean {
+  return e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey
 }
 
 function toCodeFence(code: string, language: string): string {

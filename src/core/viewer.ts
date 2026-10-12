@@ -6,6 +6,7 @@ import {
   parseDelimited,
   type Delimiter,
 } from '@/core/csv'
+import { rebaseSrcset, rebaseURL } from '@/core/view-url'
 
 type Localize = ReturnType<typeof i18n>
 export type DelimiterChoice = Delimiter | 'auto'
@@ -121,6 +122,24 @@ export function renderMedia(
   figure.className = className.MEDIA
   figure.append(media, caption)
   container.replaceChildren(figure)
+}
+
+// Points the relative URLs of a file shown on a folder page at the file's
+// folder; see rebaseURL.
+export function rebaseRelativeURLs(root: ParentNode, baseURL: string) {
+  root
+    .querySelectorAll('[href], [src], [poster], [srcset]')
+    .forEach(element => {
+      for (const name of ['href', 'src', 'poster']) {
+        const value = element.getAttribute(name)
+        if (value !== null)
+          element.setAttribute(name, rebaseURL(value, baseURL))
+      }
+      const srcset = element.getAttribute('srcset')
+      if (srcset !== null) {
+        element.setAttribute('srcset', rebaseSrcset(srcset, baseURL))
+      }
+    })
 }
 
 export function renderStatus(
