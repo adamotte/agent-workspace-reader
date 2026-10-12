@@ -7,6 +7,7 @@ import {
   GRAPHVIZ_SOURCE_ATTR,
   GRAPHVIZ_STATUS_ATTR,
 } from '@/core/graphviz'
+import { sanitizeSvg } from '@/core/sanitize'
 
 let vizPromise: ReturnType<typeof instance> | null = null
 
@@ -44,7 +45,8 @@ async function renderGraphvizElement(element: HTMLElement) {
 
   try {
     const viz = await getViz()
-    const svg = viz.renderSVGElement(code)
+    const svg = sanitizeSvg(viz.renderString(code, { format: 'svg' }))
+    if (!svg) throw new Error('Graphviz returned no SVG.')
     svg.classList.add(`${GRAPHVIZ_CLASS}-svg`)
     codeElement?.replaceWith(svg)
     element.setAttribute(GRAPHVIZ_STATUS_ATTR, 'ready')

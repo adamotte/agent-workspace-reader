@@ -8,6 +8,7 @@ import {
   MERMAID_LOOK_ATTR,
   MERMAID_LAYOUT_ATTR,
 } from '@/core/mermaid'
+import { parseLocalHTML } from '@/core/sanitize'
 
 let renderId = 0
 let initializedKey: string | null = null
@@ -68,7 +69,7 @@ async function renderMermaidElement(element: HTMLElement) {
     )
     const wrapper = document.createElement('div')
     wrapper.className = `${MERMAID_CLASS}-svg`
-    wrapper.innerHTML = svg
+    wrapper.append(parseLocalHTML(svg))
     codeElement.replaceWith(wrapper)
     bindFunctions?.(wrapper)
     element.setAttribute(MERMAID_STATUS_ATTR, 'ready')

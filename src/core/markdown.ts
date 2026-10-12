@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify'
+import type { Config as PurifyConfig } from 'dompurify'
 import hljs from 'highlight.js'
 import MarkdownIt from 'markdown-it'
 import mSub from 'markdown-it-sub'
@@ -23,6 +23,7 @@ import successIcon from '@/images/icon_success.svg'
 import copyIcon from '@/images/icon_copy.svg'
 import className from '@/config/class-name'
 import i18n from '@/config/i18n'
+import { purify } from '@/core/sanitize'
 import Ele, { svg } from './ele'
 import { escapeHtml } from 'markdown-it/lib/common/utils.mjs'
 import GithubCompatPlugin, { MathFencePlugin } from '@/core/github/compat'
@@ -149,7 +150,7 @@ function removeFrontmatter(content: string): string {
 }
 
 // Allow tags/attributes used by markdown-it plugins (KaTeX, Mermaid, alerts, etc.)
-const PURIFY_CONFIG: DOMPurify.Config = {
+const PURIFY_CONFIG: PurifyConfig = {
   ADD_TAGS: [
     'semantics',
     'annotation',
@@ -309,7 +310,7 @@ export const mdRender: MdRender = (code, options): string => {
   }
   const rawHtml = mdRender.md.render(body, env)
   const banner = mdRender.githubCompat ? renderWarningBanner(env) : ''
-  return DOMPurify.sanitize(banner + prefix + rawHtml, PURIFY_CONFIG)
+  return purify.sanitize(banner + prefix + rawHtml, PURIFY_CONFIG)
 }
 
 export default initRender
