@@ -1,3 +1,7 @@
 allowBuilds:
   esbuild: true
   svelte-preprocess: true
+
+overrides:
+  # KaTeX before 0.16.10 lets a document hang the tab (CVE-2024-28243, CVE-2024-28244).
+  '@traptitech/markdown-it-katex>katex': ^0.16.10
