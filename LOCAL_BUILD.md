@@ -1,7 +1,7 @@
-# Markdown Reader Local
+# Agent Workspace Reader
 
-A local build of [md-reader](https://github.com/md-reader/md-reader) (MIT) that
-merges two forks:
+Agent Workspace Reader is based on [md-reader](https://github.com/md-reader/md-reader)
+(MIT) and merges two of its forks:
 
 - [mdsakalu/md-reader](https://github.com/mdsakalu/md-reader): GitHub-compatible
   rendering mode, DOMPurify sanitizing, Mermaid 12, extra page themes.
@@ -15,14 +15,15 @@ pnpm install
 pnpm run build
 ```
 
-The unpacked extension lands in `extension/`, the zip in `dist/`.
+The unpacked extension lands in `extension/`, the
+`agent-workspace-reader-<version>.zip` package in `dist/`.
 
 ## Install
 
 1. Open `chrome://extensions/` (or `edge://extensions/`).
 2. Turn on Developer mode.
-3. Disable the store version of Markdown Reader if it is installed, so two
-   content scripts don't both handle Markdown pages.
+3. Disable Markdown Reader, the original extension, if it is installed from a
+   store, so two content scripts don't both handle Markdown pages.
 4. Click "Load unpacked" and select the `extension/` folder.
 5. Open the extension's details and turn on "Allow access to file URLs".
 6. Optionally, set the local folder root in the popup, for example

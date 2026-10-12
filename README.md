@@ -1,93 +1,62 @@
-# Markdown Reader
+# Agent Workspace Reader
 
-<img alt="Markdown Reader Logo" src="https://raw.githubusercontent.com/md-reader/md-reader/main/src//images/logo-stroke.svg" align="right" width="120">
+<img alt="Agent Workspace Reader logo" src="./src/images/logo-stroke.svg" align="right" width="120">
 
 English | [Français](./README-fr.md)
 
-https://md-reader.github.io
+Agent Workspace Reader is a browser extension for reading local workspaces, such as the folders your AI agents write their deliverables to: it renders Markdown, text, JSON and YAML files opened from `file://` URLs and lets you browse their folders from a side panel.
 
-[![](https://badgen.net/chrome-web-store/v/medapdbncneneejhbgcjceippjlfkmkg?icon=chrome&color=607cd2)](https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg) [![](https://badgen.net/chrome-web-store/stars/medapdbncneneejhbgcjceippjlfkmkg?icon=chrome&color=607cd2)](https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg) [![](https://badgen.net/chrome-web-store/users/medapdbncneneejhbgcjceippjlfkmkg?icon=chrome&color=607cd2)](https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg)
+It is based on [md-reader](https://github.com/md-reader/md-reader) by Bener and merges two of its forks: [mdsakalu/md-reader](https://github.com/mdsakalu/md-reader) and [mxgnene01/md-reader](https://github.com/mxgnene01/md-reader).
 
-Markdown Reader is a powerful browser extension that enables you to conveniently preview Markdown documents in your browser.
-
-> This repository contains the old source code of Markdown Reader(2.x version) and is no longer maintained.
-> It is used only to collect issues about Markdown Reader.
->
-> Please download the 3.x version from the [website](https://md-reader.github.io).
-
-- **Document Formats**: Preview links in `file://`, `http://`, `https://` and files with `.md`, `.mkd`, `.mdx`, `.markdown` extensions:
-  - `https://example.com/example.md` (online Markdown URL)
-  - `file:///Users/my-project/readme.markdown` (local Markdown file, \*[requires specific permissions](#allowing-file-access-permission))
-- **Syntax Plugins**: Emoji, superscripts/subscripts, checkboxes, math, flowcharts, Gantt charts, TOC, insertions, abbreviations, annotations, alerts.
-- **Themes**: High quality light/dark themes and code highlighting.
-- **Hot Reloading**: Real-time document changes and centered display for better reading.
-- **Document Organization**: Sidebar directory, original content preview, and image media support.
-- **Shortcuts**: Quick function invocation with web extension shortcuts.
+- **File formats**: renders local `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` and `.txt` files, JSON and YAML files as highlighted code, and extensionless `LICENSE`, `README`, `CHANGELOG` or `NOTICE` files as text.
+- **Folder browser**: the side panel lists the current folder with a type icon for each file, sorted by name or modified time. With a root folder set, it keeps the tree from the root down to the current file.
+- **Wiki links**: `[[folder/note|Alias]]` and `[[note]]` link to the matching local file.
+- **Syntax plugins**: emoji, superscripts/subscripts, task lists, math, Mermaid and Graphviz diagrams, table of contents, insertions, abbreviations, footnotes, alerts.
+- **Themes**: light/dark themes, a GitHub-compatible rendering mode and code highlighting.
+- **Hot reloading**: real-time document changes and centered display for better reading.
+- **Shortcuts**: toggle the side panel, the centered layout, hot reloading and the theme from the keyboard.
 
 ![banner](./example/example-1.png)
 
-The default theme styles are stored in https://github.com/md-reader/theme. If you’d like to view or customize the theme styles, feel free to visit the link and adjust the CSS files as needed.
+The default theme styles are stored in https://github.com/md-reader/theme.
 
 ## Installation
 
-### A. Install from web extension Store
+Agent Workspace Reader is not published on extension stores: build it from source.
 
-<a href="https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg" target="_blank"><img src="./src/images/Chrome.png" style="width:50px"/></a>
-<a href="https://microsoftedge.microsoft.com/addons/detail/markdown-reader/djnplooklihmkcioemdjfcednfkpiodc" target="_blank"><img src="./src/images/Edge.png" style="width:50px"/></a>
-<a href="https://addons.mozilla.org/firefox/addon/markdown-reader-ext/" target="_blank"><img src="./src/images/Firefox.png" style="width:50px"/></a>
-<a href="https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg" target="_blank"><img src="./src/images/Arc.png" style="width:50px"/></a>
+```bash
+# Clone this repository
+git clone https://github.com/adamotte/md-reader.git && cd md-reader
 
-### B. Building installation
+# Install dependencies
+pnpm install
 
-Example of Chrome:
+# Build the extension
+pnpm build
+```
 
-1. Clone the `md-reader` repository and build it:
+The unpacked extension lands in `extension/` and the `agent-workspace-reader-xxx.zip` package in `dist/`.
 
-   ```bash
-   # Clone this repository
-   git clone https://github.com/md-reader/md-reader.git && cd md-reader
+Then, in Chrome or Edge:
 
-   # Install dependencies
-   pnpm install
-
-   # Build the extension
-   pnpm build
-   ```
-
-2. After a successful build, the `md-reader/dist` folder will contain the `md-reader-xxx.zip` extension package.
-
-3. Go to the Extensions management page in Chrome and drag the extension into the browser to install it.
+1. Open `chrome://extensions/` (or `edge://extensions/`) and turn on Developer mode.
+2. Click "Load unpacked" and select the `extension/` folder.
 
 ## Usage
 
-Example of Chrome:
-
-After installation, Chrome is now able to preview online markdown documents. However, it is not able to preview local markdown documents by default and requires enabling file access permission for the Chrome extension.
-
 ### Allowing File Access Permission
 
-> Due to security reasons, Chrome by default disables extension access to local files. Therefore, after installing the plugin, you need to manually enable the permission in order to preview local markdown files.
+> For security reasons, Chrome doesn't let extensions access local files by default, so you need to enable it after installing the extension.
 
-In the Chrome Extensions management page, locate the installed "Markdown Reader" extension, click on "Details", and find the option "Allow access to file URLs" in the details page. Switch it to the enabled state (Please rest assured that "Markdown Reader" only performs read and display operations on markdown files and will not modify or upload user file data).
+In the Chrome Extensions management page, open the details of "Agent Workspace Reader" and turn on "Allow access to file URLs". Agent Workspace Reader only reads and displays your files: it never modifies or uploads them.
 
-<br/>
+Then open a local file or folder, such as `file:///C:/Users/name/Notes/`, or drag a Markdown file into the browser. Try it with [`example/example.md`](./example/example.md) from this repository.
 
-Now all the work is done~!ヾ(◍°∇°◍)ﾉ
-
-Try the effect by opening this online document: [Example Document](https://raw.githubusercontent.com/md-reader/md-reader/main/example/example.md); You can also try dragging a Markdown document directly into the browser!
-
-Feel free to ask any questions or provide suggestions.
-
-Giving a star to show your support is also an encouragement for me~!
-
-## Join the WeChat Community
-
-Scan the code to get the latest news and technical support:
-
-<img src="./src/images/mp-qrcode.jpg" alt="" style="width:220px"/>
+Set a root folder in the popup to keep the whole tree in the side panel and resolve bare wiki links. [LOCAL_BUILD.md](./LOCAL_BUILD.md) details how the folder browser behaves.
 
 ## License
 
-License [MIT](https://github.com/md-reader/md-reader/blob/main/LICENSE)
+[MIT](./LICENSE)
 
-© 2018-present, [Bener](https://github.com/Heroor)
+© 2018-present, [Bener](https://github.com/Heroor) (md-reader)
+© 2026-present, Anthony Damotte (Agent Workspace Reader)

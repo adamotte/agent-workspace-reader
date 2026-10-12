@@ -1,22 +1,27 @@
 {
-  "name": "md-reader",
+  "name": "agent-workspace-reader",
   "version": "2.12.14",
-  "author": "Bener",
+  "author": "Anthony Damotte",
+  "contributors": [
+    "Bener (original md-reader)"
+  ],
   "license": "MIT",
-  "description": "A markdown reader extension for chrome",
-  "homepage": "https://md-reader.github.io",
+  "description": "Read the workspaces your agents produce: Markdown, text, JSON and YAML with a folder tree and wiki links.",
+  "homepage": "https://github.com/adamotte/md-reader#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Heroor/md-reader.git"
+    "url": "git+https://github.com/adamotte/md-reader.git"
   },
   "bugs": {
-    "url": "https://github.com/Heroor/md-reader/issues"
+    "url": "https://github.com/adamotte/md-reader/issues"
   },
   "keywords": [
-    "md-reader",
+    "agent-workspace-reader",
     "markdown",
-    "markdown reader",
-    "chrome extension"
+    "reader",
+    "local files",
+    "ai agents",
+    "browser extension"
   ],
   "scripts": {
     "dev": "webpack --config ./build/webpack.dev.js",

@@ -1,93 +1,62 @@
-# Markdown Reader
+# Agent Workspace Reader
 
-<img alt="Logo Markdown Reader" src="https://raw.githubusercontent.com/md-reader/md-reader/main/src//images/logo-stroke.svg" align="right" width="120">
+<img alt="Logo Agent Workspace Reader" src="./src/images/logo-stroke.svg" align="right" width="120">
 
 [English](./README.md) | Français
 
-https://md-reader.github.io
+Agent Workspace Reader est une extension de navigateur pour lire des espaces de travail locaux, comme les dossiers où vos agents IA écrivent leurs livrables : elle affiche les fichiers Markdown, texte, JSON et YAML ouverts depuis des URL `file://` et permet de parcourir leurs dossiers depuis un panneau latéral.
 
-[![](https://badgen.net/chrome-web-store/v/medapdbncneneejhbgcjceippjlfkmkg?icon=chrome&color=607cd2)](https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg) [![](https://badgen.net/chrome-web-store/stars/medapdbncneneejhbgcjceippjlfkmkg?icon=chrome&color=607cd2)](https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg) [![](https://badgen.net/chrome-web-store/users/medapdbncneneejhbgcjceippjlfkmkg?icon=chrome&color=607cd2)](https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg)
+Elle reprend [md-reader](https://github.com/md-reader/md-reader) de Bener et fusionne deux de ses forks : [mdsakalu/md-reader](https://github.com/mdsakalu/md-reader) et [mxgnene01/md-reader](https://github.com/mxgnene01/md-reader).
 
-Markdown Reader est une extension de navigateur qui permet de prévisualiser facilement des documents Markdown dans le navigateur.
-
-> Ce dépôt contient l'ancien code source de Markdown Reader (version 2.x) et n'est plus maintenu.
-> Il sert uniquement à recueillir les tickets concernant Markdown Reader.
->
-> Téléchargez la version 3.x depuis le [site web](https://md-reader.github.io).
-
-- **Formats de document** : prévisualisation des liens `file://`, `http://`, `https://` et des fichiers d'extension `.md`, `.mkd`, `.mdx`, `.markdown` :
-  - `https://example.com/example.md` (URL Markdown en ligne)
-  - `file:///Users/my-project/readme.markdown` (fichier Markdown local, \*[nécessite une autorisation spécifique](#autoriser-laccès-aux-fichiers))
-- **Plugins de syntaxe** : émojis, exposants/indices, cases à cocher, formules mathématiques, organigrammes, diagrammes de Gantt, sommaire, insertions, abréviations, notes, alertes.
-- **Thèmes** : thèmes clairs et sombres soignés, coloration syntaxique du code.
+- **Formats de fichier** : affiche les fichiers locaux `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` et `.txt`, les fichiers JSON et YAML sous forme de code coloré, et les fichiers sans extension `LICENSE`, `README`, `CHANGELOG` ou `NOTICE` en texte.
+- **Navigation dans les dossiers** : le panneau latéral liste le dossier courant avec une icône par type de fichier, trié par nom ou par date de modification. Si un dossier racine est défini, il garde l'arborescence de la racine jusqu'au fichier courant.
+- **Liens wiki** : `[[dossier/note|Alias]]` et `[[note]]` pointent vers le fichier local correspondant.
+- **Plugins de syntaxe** : émojis, exposants/indices, cases à cocher, formules mathématiques, diagrammes Mermaid et Graphviz, sommaire, insertions, abréviations, notes de bas de page, alertes.
+- **Thèmes** : thèmes clairs et sombres, mode de rendu compatible GitHub, coloration syntaxique du code.
 - **Rechargement à chaud** : prise en compte des modifications du document en temps réel et affichage centré pour une meilleure lecture.
-- **Organisation du document** : sommaire dans le panneau latéral, affichage de la source et prise en charge des images.
-- **Raccourcis** : accès rapide aux fonctions par les raccourcis clavier de l'extension.
+- **Raccourcis** : affichage du panneau latéral, mise en page centrée, rechargement à chaud et thème au clavier.
 
 ![bannière](./example/example-1.png)
 
-Les styles du thème par défaut se trouvent sur https://github.com/md-reader/theme. Pour les consulter ou les personnaliser, rendez-vous sur ce dépôt et adaptez les fichiers CSS selon vos besoins.
+Les styles du thème par défaut se trouvent sur https://github.com/md-reader/theme.
 
 ## Installation
 
-### A. Depuis la boutique d'extensions
+Agent Workspace Reader n'est pas publiée sur les boutiques d'extensions : construisez-la à partir des sources.
 
-<a href="https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg" target="_blank"><img src="./src/images/Chrome.png" style="width:50px"/></a>
-<a href="https://microsoftedge.microsoft.com/addons/detail/markdown-reader/djnplooklihmkcioemdjfcednfkpiodc" target="_blank"><img src="./src/images/Edge.png" style="width:50px"/></a>
-<a href="https://addons.mozilla.org/firefox/addon/markdown-reader-ext/" target="_blank"><img src="./src/images/Firefox.png" style="width:50px"/></a>
-<a href="https://chromewebstore.google.com/detail/md-reader/medapdbncneneejhbgcjceippjlfkmkg" target="_blank"><img src="./src/images/Arc.png" style="width:50px"/></a>
+```bash
+# Cloner ce dépôt
+git clone https://github.com/adamotte/md-reader.git && cd md-reader
 
-### B. À partir des sources
+# Installer les dépendances
+pnpm install
 
-Exemple avec Chrome :
+# Construire l'extension
+pnpm build
+```
 
-1. Clonez le dépôt `md-reader` et lancez le build :
+L'extension décompressée se trouve dans `extension/` et le paquet `agent-workspace-reader-xxx.zip` dans `dist/`.
 
-   ```bash
-   # Cloner ce dépôt
-   git clone https://github.com/md-reader/md-reader.git && cd md-reader
+Ensuite, dans Chrome ou Edge :
 
-   # Installer les dépendances
-   pnpm install
-
-   # Construire l'extension
-   pnpm build
-   ```
-
-2. Une fois le build terminé, le dossier `md-reader/dist` contient le paquet d'extension `md-reader-xxx.zip`.
-
-3. Ouvrez la page de gestion des extensions de Chrome et faites-y glisser l'extension pour l'installer.
+1. Ouvrez `chrome://extensions/` (ou `edge://extensions/`) et activez le mode développeur.
+2. Cliquez sur « Charger l'extension non empaquetée » et sélectionnez le dossier `extension/`.
 
 ## Utilisation
 
-Exemple avec Chrome :
-
-Une fois l'extension installée, Chrome peut prévisualiser les documents Markdown en ligne. Il ne peut en revanche pas prévisualiser les documents Markdown locaux par défaut : il faut d'abord autoriser l'extension à accéder aux fichiers.
-
 ### Autoriser l'accès aux fichiers
 
-> Pour des raisons de sécurité, Chrome interdit par défaut aux extensions d'accéder aux fichiers locaux. Après l'installation, vous devez donc activer cette autorisation manuellement pour prévisualiser des fichiers Markdown locaux.
+> Pour des raisons de sécurité, Chrome interdit par défaut aux extensions d'accéder aux fichiers locaux : il faut activer cette autorisation après l'installation.
 
-Sur la page de gestion des extensions de Chrome, repérez l'extension « Markdown Reader », cliquez sur « Détails », puis activez l'option « Autoriser l'accès aux URL de fichiers » (« Markdown Reader » se contente de lire et d'afficher les fichiers Markdown : il ne modifie ni n'envoie aucune donnée de vos fichiers).
+Sur la page de gestion des extensions de Chrome, ouvrez les détails de « Agent Workspace Reader » et activez l'option « Autoriser l'accès aux URL de fichiers ». Agent Workspace Reader se contente de lire et d'afficher vos fichiers : elle ne les modifie ni ne les envoie.
 
-<br/>
+Ouvrez ensuite un fichier ou un dossier local, par exemple `file:///C:/Users/nom/Notes/`, ou faites glisser un fichier Markdown dans le navigateur. Essayez avec [`example/example.md`](./example/example.md) de ce dépôt.
 
-Et voilà, c'est terminé ! ヾ(◍°∇°◍)ﾉ
-
-Essayez avec ce document en ligne : [Document d'exemple](https://raw.githubusercontent.com/md-reader/md-reader/main/example/example.md). Vous pouvez aussi faire glisser un document Markdown directement dans le navigateur !
-
-N'hésitez pas à poser vos questions ou à faire des suggestions.
-
-Une étoile sur le dépôt est aussi un bel encouragement !
-
-## Rejoindre la communauté WeChat
-
-Scannez le code pour suivre les dernières nouvelles et obtenir de l'aide technique :
-
-<img src="./src/images/mp-qrcode.jpg" alt="" style="width:220px"/>
+Définissez un dossier racine dans la popup pour garder toute l'arborescence dans le panneau latéral et résoudre les liens wiki courts. [LOCAL_BUILD.md](./LOCAL_BUILD.md) détaille le fonctionnement de la navigation dans les dossiers.
 
 ## Licence
 
-Licence [MIT](https://github.com/md-reader/md-reader/blob/main/LICENSE)
+[MIT](./LICENSE)
 
-© 2018-présent, [Bener](https://github.com/Heroor)
+© 2018-présent, [Bener](https://github.com/Heroor) (md-reader)
+© 2026-présent, Anthony Damotte (Agent Workspace Reader)

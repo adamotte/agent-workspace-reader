@@ -1,8 +1,8 @@
 {
-  "name": "Markdown Reader Local",
+  "name": "__MSG_ext_name__",
   "version": "2.12.14",
   "version_name": "2.12.14-rooted-folder-tree",
-  "author": "Bener",
+  "author": "Anthony Damotte",
   "manifest_version": 3,
   "description": "__MSG_ext_desc__",
   "default_locale": "en",
@@ -23,7 +23,7 @@
     "service_worker": "js/background.js"
   },
   "action": {
-    "default_title": "Markdown Reader Local",
+    "default_title": "__MSG_ext_name__",
     "default_popup": "popup.html"
   },
   "permissions": ["activeTab", "storage"],

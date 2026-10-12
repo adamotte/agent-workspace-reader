@@ -1,9 +1,9 @@
 {
   "ext_name": {
-    "message": "MD Reader"
+    "message": "Agent Workspace Reader"
   },
   "ext_desc": {
-    "message": "Une extension de lecture Markdown pour Chrome."
+    "message": "Lisez les espaces de travail produits par vos agents : Markdown, texte, JSON et YAML, avec arborescence et liens wiki."
   },
   "command_toggle_side": {
     "message": "Afficher/masquer le panneau latéral"

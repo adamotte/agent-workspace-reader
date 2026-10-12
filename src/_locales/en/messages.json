@@ -1,11 +1,11 @@
 {
   "ext_name": {
-    "message": "MD Reader",
-    "description": "A markdown reader extension for Chrome."
+    "message": "Agent Workspace Reader",
+    "description": "The extension name."
   },
   "ext_desc": {
-    "message": "A markdown reader extension for Chrome.",
-    "description": "Support view file://, http://, https:// URL and *.md, *.mkd, *.markdown extension files."
+    "message": "Read the workspaces your agents produce: Markdown, text, JSON and YAML with a folder tree and wiki links.",
+    "description": "The extension description shown in the browser's extension list."
   },
   "command_toggle_side": {
     "message": "Toggle side"
