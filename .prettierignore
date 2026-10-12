@@ -1,3 +1,5 @@
 dist
 extension
 node_modules
+# Theme palettes keep one compact block per theme
+src/style/variable.less
