@@ -1,27 +1,45 @@
 # Markdown Reader Local
 
-这是基于 `md-reader/md-reader` MIT 开源项目构建的本地版本，增加了本地文件夹目录浏览能力。
+A local build of [md-reader](https://github.com/md-reader/md-reader) (MIT) that
+merges two forks:
 
-## 安装
+- [mdsakalu/md-reader](https://github.com/mdsakalu/md-reader): GitHub-compatible
+  rendering mode, DOMPurify sanitizing, Mermaid 12, extra page themes.
+- [mxgnene01/md-reader](https://github.com/mxgnene01/md-reader): local folder
+  browser and Obsidian-style wiki links.
 
-1. 打开 `chrome://extensions/`。
-2. 开启“开发者模式”。
-3. 如果商店版 Markdown Reader 仍在运行，先将它停用，避免两个内容脚本同时处理 Markdown 页面。
-4. 点击“加载已解压的扩展程序”。
-5. 选择 `/Users/bytedance/mxg/work/md-reader/extension`。
-6. 打开 `Markdown Reader Local` 的“详情”，开启“允许访问文件网址”。
-7. 点击扩展图标，在“本地目录根路径”中填入绝对路径，例如 `/Users/用户名/Obsidian`。
+## Build
 
-## 使用
+```bash
+pnpm install
+pnpm run build
+```
 
-- 直接在 Chrome 打开任意 `.md`、`.mdx`、`.mdc`、`.mkd`、`.markdown` 或 `.txt` 文件，会自动渲染。
-- 左侧顶部显示当前文件夹中的 Markdown 文件和子文件夹，当前文件会高亮。
-- 子文件夹始终优先；默认按文件名倒序，排序方式可切换并自动保存。
-- 设置根路径后，侧边栏始终保留从根目录到当前文件的层级，并自动展开当前文件的祖先目录。
-- 点击目录标题右侧的排序按钮，可在文件名正序/倒序、编辑时间正序/倒序之间切换；文件夹始终优先。
-- Obsidian WikiLink（如 `[[../../30_entities/people/孟祥国|孟祥国]]`）会显示为可点击别名链接，并跳转到对应的本地 Markdown 文件；裸链接（如 `[[2026-06-23]]`）会在配置的根目录中按文件名查找。
-- 文件夹与正文目录之间的分隔线可上下拖动；比例会自动保存，双击分隔线恢复默认。
-- 在地址栏打开 `file:///某个文件夹路径/`，会进入文件夹目录页。
-- 点击文件夹后的“上级”，可以向上切换目录。
+The unpacked extension lands in `extension/`, the zip in `dist/`.
 
-源码仓库：https://github.com/md-reader/md-reader
+## Install
+
+1. Open `chrome://extensions/` (or `edge://extensions/`).
+2. Turn on Developer mode.
+3. Disable the store version of Markdown Reader if it is installed, so two
+   content scripts don't both handle Markdown pages.
+4. Click "Load unpacked" and select the `extension/` folder.
+5. Open the extension's details and turn on "Allow access to file URLs".
+6. Optionally, set the local folder root in the popup, for example
+   `C:\Users\name\Notes` or `/Users/name/Obsidian`.
+
+## Use
+
+- Opening a local `.md`, `.mdx`, `.mdc`, `.mkd`, `.markdown` or `.txt` file
+  renders it, with the current folder's Markdown files and subfolders listed at
+  the top of the side panel and the current file highlighted.
+- Opening a folder (`file:///C:/path/to/folder/`) shows the folder page.
+- Subfolders come first. The sort button switches between name and modified
+  time, ascending or descending; the choice is saved.
+- With a root set, the side panel keeps the tree from the root down to the
+  current file and expands its ancestor folders.
+- Wiki links such as `[[folder/note|Alias]]` link to the matching local file;
+  bare links such as `[[2026-06-23]]` are looked up by file name under the root.
+- Drag the side panel's right edge to change its width, and the line between
+  the folder list and the outline to change their heights. Both are saved;
+  double-click a handle to reset it.
