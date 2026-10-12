@@ -3,7 +3,7 @@
     "message": "Agent Workspace Reader"
   },
   "ext_desc": {
-    "message": "Lisez les espaces de travail produits par vos agents : Markdown, texte, JSON et YAML, avec arborescence et liens wiki."
+    "message": "Lisez les dossiers où travaillent vos agents IA : Markdown, CSV, JSON, YAML, code, logs et images, avec arborescence et liens wiki."
   },
   "command_toggle_side": {
     "message": "Afficher/masquer le panneau latéral"
