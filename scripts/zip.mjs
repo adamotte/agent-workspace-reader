@@ -1,4 +1,5 @@
 import fs from 'fs/promises'
+import { fileURLToPath } from 'url'
 import archiver from 'archiver'
 import { url, log, newVersion } from './utils.mjs'
 
@@ -25,7 +26,7 @@ try {
   )
 
   archive.pipe(output)
-  archive.directory(entryDir.pathname, false)
+  archive.directory(fileURLToPath(entryDir), false)
   archive.finalize()
 } catch (err) {
   log.red(err)
