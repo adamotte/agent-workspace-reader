@@ -23,7 +23,7 @@ Les agents de code et de recherche (Claude Code, Codex, Copilot, Cursor…) lais
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> **Local et en lecture seule.** L'extension ne s'exécute que sur les URL `file://` et ne demande aucune autorisation hormis le stockage de ses propres réglages. Elle ne modifie ni n'envoie jamais vos fichiers, et ne charge ni image ni feuille de style distante : ouvrir un document ne contacte jamais un autre hôte. Une image distante ou introuvable est remplacée par son texte alternatif, les badges restent donc lisibles.
+> **Local, et en lecture seule tant que vous n'éditez pas.** L'extension ne s'exécute que sur les URL `file://` et ne demande aucune autorisation hormis le stockage de ses propres réglages. Elle n'envoie jamais vos fichiers, et ne charge ni image ni feuille de style distante : ouvrir un document ne contacte jamais un autre hôte. Elle n'écrit que les fichiers que vous enregistrez depuis son [mode édition](#%EF%B8%8F-éditer-sur-place), dans un dossier que vous avez accordé par la boîte de dialogue du navigateur. Une image distante ou introuvable est remplacée par son texte alternatif, les badges restent donc lisibles.
 
 ---
 
@@ -65,6 +65,13 @@ Les agents de code et de recherche (Claude Code, Codex, Copilot, Cursor…) lais
 
 Clair, Sombre, GitHub clair, GitHub sombre, Dracula, Nord, One Dark, Catppuccin Mocha, Rosé Pine, Gruvbox sombre, Tokyo Midnight, Monokai Pro, Solarized sombre, Solarized clair et Synthwave '84, ou **Auto** pour suivre le système. La coloration du code suit le thème.
 
+### ✏️ Éditer sur place
+
+- 📝 **Bouton Modifier** sur tout fichier texte : Markdown, texte, code, configuration, journaux, CSV et TSV. Images, vidéo, audio, PDF et HTML restent en lecture seule.
+- 🪟 **Éditeur à côté de la page rendue** : CodeMirror avec numéros de ligne, coloration syntaxique, recherche et annulation à gauche, l'aperçu en direct à droite, ou l'éditeur seul une fois l'aperçu masqué
+- 💾 **Enregistrement explicite** avec <kbd>Ctrl</kbd>+<kbd>S</kbd> ou le bouton Enregistrer ; un point signale les modifications non enregistrées, et une confirmation protège la sortie
+- 🤝 **Attentif aux agents** : si un agent écrit le fichier pendant que vous l'éditez, l'éditeur le recharge quand vous n'avez rien modifié, et sinon propose de recharger ou d'enregistrer quand même
+
 ### 🛋️ Confort de lecture
 
 - 🔄 **Rechargement à chaud** : la page se met à jour pendant que l'agent écrit le fichier
@@ -101,6 +108,8 @@ Cliquez sur l'icône de l'extension pour ouvrir ses réglages :
 
 Ouvrez ensuite un fichier ou un dossier, par exemple `file:///C:/Users/moi/agents/atlas/AGENTS.md`, ou faites glisser un fichier dans le navigateur.
 
+**Autoriser l'écriture.** Au premier clic sur **Modifier** (ou <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>E</kbd>), la boîte de dialogue de dossier du navigateur s'ouvre : choisissez le dossier que la page indique, votre racine de dossier local ou le dossier du fichier. Cette autorisation vaut pour tous les fichiers qu'il contient. Le navigateur l'oublie à sa fermeture ; le prochain **Modifier** ne demande alors qu'une confirmation. Le navigateur refuse quelques dossiers, comme la racine de votre profil utilisateur ou les dossiers système : choisissez alors un sous-dossier comme racine.
+
 Pour essayer, choisissez comme racine le dossier [`example/atlas-workspace`](./example/atlas-workspace) de ce dépôt, l'espace de travail des captures d'écran, et ouvrez son `AGENTS.md`.
 
 [LOCAL_BUILD.md](./LOCAL_BUILD.md) détaille le fonctionnement de la navigation dans les dossiers.
@@ -116,7 +125,7 @@ Pour essayer, choisissez comme racine le dossier [`example/atlas-workspace`](./e
 | <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>R</kbd> | Activer ou désactiver le rechargement à chaud |
 | <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>T</kbd> | Basculer entre les thèmes Clair et Sombre     |
 
-Modifiez-les sur `chrome://extensions/shortcuts` (ou `edge://extensions/shortcuts`).
+Modifiez-les sur `chrome://extensions/shortcuts` (ou `edge://extensions/shortcuts`). Dans la page, <kbd>Alt</kbd>+<kbd>Maj</kbd>+<kbd>E</kbd> ouvre ou ferme l'éditeur, <kbd>Ctrl</kbd>+<kbd>S</kbd> enregistre et <kbd>Échap</kbd> le ferme.
 
 ## ⚠️ Limites connues
 
@@ -125,6 +134,7 @@ Modifiez-les sur `chrome://extensions/shortcuts` (ou `edge://extensions/shortcut
 - **Types de fichier inconnus**, comme `.jsonl` : ils n'apparaissent pas dans l'arborescence.
 - **Grands tableaux** : l'affichage d'un CSV ou d'un TSV s'arrête aux 5 000 premières lignes.
 - **Contenu distant** : les images et feuilles de style distantes ne sont pas chargées, par choix. Les liens vers des pages distantes fonctionnent.
+- **Édition** : les fichiers sont enregistrés en UTF-8 sans marque d'ordre des octets, avec leurs fins de ligne d'origine. Pas d'« Enregistrer sous » : l'éditeur écrit le fichier qu'il affiche.
 - **Markdown Reader** : si l'extension md-reader d'origine est installée, désactivez-la pour que les deux extensions n'affichent pas la même page.
 
 ## 🛠️ Développement

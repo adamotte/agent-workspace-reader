@@ -23,7 +23,7 @@ Coding and research agents (Claude Code, Codex, Copilot, Cursor…) leave their 
 
 <!-- prettier-ignore -->
 > [!NOTE]
-> **Local and read-only.** The extension only runs on `file://` URLs and needs no permission beyond storing its own settings. It never modifies or uploads your files, and it doesn't load remote images or stylesheets: opening a document never contacts another host. A remote or missing image shows its alt text instead, so badges still read.
+> **Local, and read-only unless you edit.** The extension only runs on `file://` URLs and needs no permission beyond storing its own settings. It never uploads your files, and it doesn't load remote images or stylesheets: opening a document never contacts another host. The only writes are the files you save from its [edit mode](#%EF%B8%8F-edit-in-place), inside a folder you granted through the browser's own folder dialog. A remote or missing image shows its alt text instead, so badges still read.
 
 ---
 
@@ -65,6 +65,13 @@ Coding and research agents (Claude Code, Codex, Copilot, Cursor…) leave their 
 
 Light, Dark, GitHub Light, GitHub Dark, Dracula, Nord, One Dark, Catppuccin Mocha, Rosé Pine, Gruvbox Dark, Tokyo Midnight, Monokai Pro, Solarized Dark, Solarized Light and Synthwave '84, or **Auto** to follow the system. Code highlighting follows the theme.
 
+### ✏️ Edit in place
+
+- 📝 **Edit button** on any text file: Markdown, text, code, config, logs, CSV and TSV. Images, video, audio, PDF and HTML stay read-only.
+- 🪟 **Editor beside the rendered page**: CodeMirror with line numbers, syntax highlighting, search and undo on the left, the live preview on the right, or the editor alone with the preview hidden
+- 💾 **Explicit saves** with <kbd>Ctrl</kbd>+<kbd>S</kbd> or the Save button; an unsaved-changes dot, and a confirmation before leaving with changes
+- 🤝 **Agent-aware**: if an agent writes the file while you edit it, the editor reloads it when you have no changes, and otherwise asks whether to reload or save anyway
+
 ### 🛋️ Reading comfort
 
 - 🔄 **Hot reload**: the page updates as the agent writes the file
@@ -101,6 +108,8 @@ Click the extension icon to open its settings:
 
 Then open a file or a folder, such as `file:///C:/Users/me/agents/atlas/AGENTS.md`, or drag a file into the browser.
 
+**Granting write access.** The first time you click **Edit** (or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>), the browser's folder dialog opens: choose the folder the page names, your local folder root or the file's own folder. That one grant covers every file under it. Browsers forget the grant when they close; the next **Edit** then only asks for confirmation. The browser refuses a few folders, such as your user profile root or system folders: set a sub-folder as the root instead.
+
 To try it, set the root to the [`example/atlas-workspace`](./example/atlas-workspace) folder of this repository, the workspace shown in the screenshots, and open its `AGENTS.md`.
 
 [LOCAL_BUILD.md](./LOCAL_BUILD.md) details how the folder browser behaves.
@@ -116,7 +125,7 @@ To try it, set the root to the [`example/atlas-workspace`](./example/atlas-works
 | <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> | Toggle hot reload                        |
 | <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> | Switch between the Light and Dark themes |
 
-Change them at `chrome://extensions/shortcuts` (or `edge://extensions/shortcuts`).
+Change them at `chrome://extensions/shortcuts` (or `edge://extensions/shortcuts`). In the page, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> opens or closes the editor, <kbd>Ctrl</kbd>+<kbd>S</kbd> saves and <kbd>Esc</kbd> closes it.
 
 ## ⚠️ Known limitations
 
@@ -125,6 +134,7 @@ Change them at `chrome://extensions/shortcuts` (or `edge://extensions/shortcuts`
 - **Unknown file types**, such as `.jsonl`, aren't listed in the tree.
 - **Large tables**: a CSV or TSV view shows its first 5,000 rows.
 - **Remote content**: remote images and stylesheets aren't loaded, by design. Links to remote pages still work.
+- **Editing**: files are saved as UTF-8 without a byte order mark, with their original line endings. There is no "Save as"; the editor writes the file it shows.
 - **Markdown Reader**: if the original md-reader extension is installed, disable it so that the two extensions don't both render the same page.
 
 ## 🛠️ Development

@@ -852,6 +852,10 @@ body.md-reader {
       position: absolute;
       right: 16px;
     }
+    &--edit {
+      position: absolute;
+      right: 56px;
+    }
     &--side-expand {
       display: none;
       position: absolute;
@@ -897,6 +901,182 @@ body.md-reader {
         svg.icon-success {
           display: initial;
         }
+      }
+    }
+  }
+}
+
+// ─── Edit mode ───────────────────────────────────────────────────────────────
+// The editor sits beside the rendered content, which keeps scrolling with the
+// page; the editor itself stays in view and scrolls its own text.
+body.md-reader {
+  .md-reader__editor-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin: 16px 16px 0;
+    padding: 10px 16px;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    background: var(--color-primary-alpha-10);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    > span {
+      flex: 1 1 240px;
+    }
+    &--warning {
+      border-color: var(--color-warning);
+      background: var(--color-warning-alpha-10);
+    }
+    &--error {
+      border-color: var(--color-danger);
+      background: var(--color-danger-alpha-10);
+    }
+  }
+
+  .md-reader__editor-action {
+    padding: 4px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    &:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-alpha-10);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 1px;
+    }
+    &--primary {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: var(--color-white, #fff);
+      &:hover {
+        background: var(--color-primary--hover, var(--color-primary));
+      }
+    }
+  }
+
+  .md-reader__editor {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    min-width: 0;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    font-size: 14px;
+  }
+  .md-reader__editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    // Clears the side panel button, which floats over the top left corner
+    padding: 10px 16px 10px 60px;
+    border-bottom: 1px solid var(--color-border);
+    .md-reader__editor-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .md-reader__editor-dirty {
+      flex: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--color-warning);
+    }
+    .md-reader__editor-status {
+      flex: none;
+      color: var(--color-text-gray);
+      font-size: 13px;
+      &:empty {
+        display: none;
+      }
+    }
+  }
+  .md-reader__editor-pane {
+    flex: 1 1 auto;
+    min-height: 0;
+    // CodeMirror's injected styles, under a selector of our own
+    .cm-editor {
+      height: 100%;
+    }
+    .cm-editor.cm-focused {
+      outline: none;
+    }
+  }
+
+  &.editing {
+    .md-reader__body {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      .md-reader__editor-banner {
+        flex: 0 0 auto;
+        width: calc(100% - 32px);
+      }
+      .md-reader__editor {
+        flex: 1 1 50%;
+      }
+      .md-reader__markdown-content {
+        flex: 1 1 50%;
+        min-width: 0;
+        padding: 30px 40px 40px;
+        &.centered {
+          max-width: none;
+          > table {
+            max-width: 100%;
+            left: 0;
+            translate: none;
+          }
+        }
+      }
+    }
+    .md-reader__btn--code-toggle {
+      display: none;
+    }
+    &.editing--no-preview .md-reader__body {
+      .md-reader__editor {
+        flex-basis: 100%;
+        border-right: none;
+      }
+      .md-reader__markdown-content {
+        display: none;
+      }
+    }
+    @media screen and (max-width: 960px) {
+      .md-reader__body {
+        display: block;
+        .md-reader__editor {
+          position: relative;
+          height: 70vh;
+          border-right: none;
+          border-bottom: 1px solid var(--color-border);
+        }
+      }
+    }
+    @media print {
+      .md-reader__editor,
+      .md-reader__editor-banner {
+        display: none;
+      }
+      .md-reader__body .md-reader__markdown-content {
+        display: block;
       }
     }
   }

@@ -21,7 +21,10 @@ const DELIMITER_KEYS: Record<Delimiter, string> = {
 }
 const NUMBER = /^[-+]?(\d[\d\s]*)?[.,]?\d+([eE][-+]?\d+)?\s*%?$/
 
-function format(template: string, values: Record<string, string>): string {
+export function format(
+  template: string,
+  values: Record<string, string>,
+): string {
   return template.replace(/\{(\w+)\}/g, (match, key) => values[key] ?? match)
 }
 

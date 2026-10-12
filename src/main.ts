@@ -1,4 +1,5 @@
 import throttle from 'lodash.throttle'
+import debounce from 'lodash.debounce'
 import Event from '@/core/event'
 import storage from '@/core/storage'
 import Ele, { svg } from '@/core/ele'
@@ -6,7 +7,7 @@ import { initPlugins } from '@/plugins'
 import lifecycle from '@/core/lifecycle'
 import className from '@/config/class-name'
 import i18n from '@/config/i18n'
-import type { Theme } from '@/config/page-themes'
+import { isDarkTheme, type Theme } from '@/config/page-themes'
 import { getDefaultData, type Data } from '@/core/data'
 import { mdRender, type MdOptions } from '@/core/markdown'
 import { createIcon } from '@/core/file-icons'
@@ -20,12 +21,28 @@ import { decodeHash, legacySlug, slugify } from '@/core/slug'
 import { resolveWikiLink, resolveWikiLinks } from '@/core/wiki-link'
 import { showImageAlt } from '@/core/image-alt'
 import {
+  format,
   rebaseRelativeURLs,
   renderMedia,
   renderStatus,
   renderTable,
   type DelimiterChoice,
 } from '@/core/viewer'
+import { createEditor, type Editor } from '@/core/editor'
+import {
+  FolderMismatchError,
+  PickerCancelledError,
+  isFileAccessSupported,
+  readFile,
+  resolveFileHandle,
+  writeFile,
+} from '@/core/file-access'
+import {
+  applyEOL,
+  detectEOL,
+  hasChangedOnDisk,
+  type EOL,
+} from '@/core/file-path'
 import {
   fetchLocalText,
   getDirectoryName,
@@ -53,6 +70,7 @@ import {
 import codeIcon from '@/images/icon_code.svg'
 import sideIcon from '@/images/icon_side.svg'
 import goTopIcon from '@/images/icon_go_top.svg'
+import editIcon from '@/images/icon_edit.svg'
 import '@/style/index.less'
 
 function main(data: Data) {
@@ -90,7 +108,7 @@ function main(data: Data) {
     updateMdPlugins() {
       reloading = true
       if (mdRaw) {
-        contentRender(mdRaw)
+        contentRender(shownText())
         renderSide()
       } else {
         window.location.reload()
@@ -100,6 +118,7 @@ function main(data: Data) {
     updatePageTheme(theme: Theme, prevTheme: Theme) {
       setTheme(theme)
       renderContentByTheme(theme, prevTheme)
+      session?.editor.setTheme(isDarkTheme(toTheme(theme)))
     },
     toggleRefresh(value) {
       clearTimeout(pollingTimer)
@@ -146,6 +165,8 @@ function main(data: Data) {
   let mdRaw: string = null
   let isSideHover: boolean = false
   let globalEvent: Event = new Event()
+  // The file being edited, or null while reading; see startEdit.
+  let session: EditSession | null = null
 
   initPlugins({ event: globalEvent })
 
@@ -275,10 +296,56 @@ function main(data: Data) {
     true,
   )
 
+  /* editor */
+  const editorName = new Ele<HTMLElement>('span', {
+    className: className.EDITOR_NAME,
+  })
+  const editorDirty = new Ele<HTMLElement>('span', {
+    className: className.EDITOR_DIRTY,
+    title: localize('edit_modified'),
+    'aria-label': localize('edit_modified'),
+  })
+  editorDirty.hide()
+  const editorStatus = new Ele<HTMLElement>('span', {
+    className: className.EDITOR_STATUS,
+  })
+  const previewBtn = createEditorAction(localize('edit_preview_hide'))
+  const saveBtn = createEditorAction(localize('edit_save'), true)
+  saveBtn.ele.title = localize('edit_save_title')
+  const closeBtn = createEditorAction(localize('edit_close'))
+  closeBtn.ele.title = localize('edit_close_title')
+  const editorToolbar = new Ele<HTMLElement>(
+    'div',
+    { className: className.EDITOR_TOOLBAR },
+    [editorName, editorDirty, editorStatus, previewBtn, saveBtn, closeBtn],
+  )
+  const editorPane = new Ele<HTMLElement>('div', {
+    className: className.EDITOR_PANE,
+  })
+  const editorWrap = new Ele<HTMLElement>(
+    'section',
+    { className: className.EDITOR, 'aria-label': localize('title_edit') },
+    [editorToolbar, editorPane],
+  )
+  editorWrap.hide()
+  // Messages about editing, above the editor and the content
+  const editorBanner = new Ele<HTMLElement>('div', {
+    className: className.EDITOR_BANNER,
+    role: 'status',
+  })
+  editorBanner.hide()
+  previewBtn.on('click', () => {
+    configData.editorPreview = configData.editorPreview === false
+    void storage.set('editorPreview', configData.editorPreview)
+    applyPreview()
+  })
+  saveBtn.on('click', () => void saveEdit())
+  closeBtn.on('click', closeEdit)
+
   const mdBody = new Ele<HTMLElement>(
     'main',
     { className: className.MD_BODY },
-    mdContent,
+    [editorBanner, editorWrap, mdContent],
   )
 
   /* render side */
@@ -408,6 +475,34 @@ function main(data: Data) {
   })
   rawToggleBtn.toggle(Boolean(viewedFileURL) || !directoryPage)
 
+  /* render edit button */
+  const editBtn = new Ele<HTMLElement>(
+    'button',
+    {
+      className: [className.MD_BUTTON, className.EDIT_BTN],
+      title: localize('title_edit'),
+    },
+    svg(editIcon),
+  )
+  editBtn.on('click', () => void startEdit())
+  updateEditButton()
+  document.addEventListener('keydown', e => {
+    if (
+      e.altKey &&
+      e.shiftKey &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      e.code === 'KeyE'
+    ) {
+      e.preventDefault()
+      if (session) {
+        closeEdit()
+      } else {
+        void startEdit()
+      }
+    }
+  })
+
   /* render side expand button */
   const sideExpandBtn = new Ele<HTMLElement>(
     'button',
@@ -472,7 +567,7 @@ function main(data: Data) {
   const buttonWrap = new Ele<HTMLElement>(
     'div',
     { className: className.BUTTON_WRAP_ELE },
-    [sideExpandBtn, rawToggleBtn, goTopBtn],
+    [sideExpandBtn, editBtn, rawToggleBtn, goTopBtn],
   )
 
   /* mount elements */
@@ -493,6 +588,13 @@ function main(data: Data) {
         (url && viewedFileURL && isSameLocalURL(url, viewedFileURL))
       ) {
         return
+      }
+      if (session) {
+        if (!confirmLeave()) {
+          history.pushState(null, '', session.pageURL)
+          return
+        }
+        stopEdit(false)
       }
       void showFile(url, e.state?.scrollY)
     })
@@ -521,7 +623,10 @@ function main(data: Data) {
       const res = await readShownFile()
       // Unless another file is shown by now
       if (res !== undefined && url === viewedFileURL) {
-        if ((mdRaw === undefined || mdRaw === null) && !directoryPage) {
+        if (session) {
+          // The editor owns the page; see onDiskChange.
+          onDiskChange(res)
+        } else if ((mdRaw === undefined || mdRaw === null) && !directoryPage) {
           if (res) {
             window.location.reload()
             return
@@ -585,11 +690,15 @@ function main(data: Data) {
     target.hash = ''
     const type = getFileType(target.pathname)
     if (!type || type.kind === 'native') {
+      if (!confirmLeave()) return
+      stopEdit(false)
       window.location.href = url
       return
     }
     // The History API keeps a file: page on its path.
     if (!directoryPage || !target.href.startsWith(pageFolderURL)) {
+      if (!confirmLeave()) return
+      stopEdit(false)
       const folderURL = target.href.startsWith(rootURL) ? rootURL : undefined
       window.location.href = getViewerURL(target.href, folderURL) + hash
       return
@@ -602,6 +711,8 @@ function main(data: Data) {
       scrollToHash()
       return
     }
+    if (!confirmLeave()) return
+    stopEdit(false)
     saveScroll()
     history.pushState(null, '', pageURL)
     void showFile(target.href)
@@ -622,6 +733,7 @@ function main(data: Data) {
       if (current !== showing) return
     }
     setFile(url)
+    hideBanner()
     // Also drops the last file's media; see mdRenderer.
     mdContent.ele.replaceChildren()
     if (error) {
@@ -638,6 +750,7 @@ function main(data: Data) {
     }
     rawContainer.textContent = mdRaw ?? ''
     rawToggleBtn.toggle(Boolean(url))
+    updateEditButton()
     renderSide()
     folderView?.setCurrentURL(fileURL)
     scrollToHash(scrollY)
@@ -645,6 +758,330 @@ function main(data: Data) {
 
   function saveScroll() {
     history.replaceState({ ...history.state, scrollY: window.scrollY }, '')
+  }
+
+  /* edit mode */
+
+  // The text the content shows: the draft while the preview is on
+  function shownText(): string {
+    return session && configData.editorPreview !== false
+      ? session.editor.getDoc()
+      : mdRaw
+  }
+
+  function canEdit(): boolean {
+    return (
+      isFileAccessSupported() &&
+      Boolean(fileType && isEditable(fileType.kind)) &&
+      typeof mdRaw === 'string'
+    )
+  }
+
+  function updateEditButton() {
+    editBtn.toggle(!session && canEdit())
+  }
+
+  // Opens the file in the editor, after the user granted its folder once;
+  // see resolveFileHandle. Runs on a click or a key press: the folder
+  // picker and the permission prompt need a user gesture.
+  async function startEdit() {
+    if (session || !canEdit()) return
+    const url = fileURL
+    const text = mdRaw
+    const candidateRootURLs = Array.from(
+      new Set(
+        [
+          useConfiguredRoot ? configuredRootURL : undefined,
+          directoryPage ? pageFolderURL : undefined,
+          getParentDirectoryURL(url),
+        ].filter(Boolean),
+      ),
+    )
+    let handle: FileSystemFileHandle
+    let onDisk: { text: string; lastModified: number }
+    try {
+      ;({ handle } = await resolveFileHandle({
+        fileURL: url,
+        candidateRootURLs,
+        currentText: text,
+        onPick: rootURL =>
+          showBanner(
+            format(localize('edit_pick_folder'), {
+              path: displayPath(rootURL),
+            }),
+          ),
+      }))
+      onDisk = await readFile(handle)
+    } catch (e) {
+      showEditError(e)
+      return
+    }
+    // Another file opened meanwhile
+    if (url !== fileURL || session) return
+    hideBanner()
+    const baseText = toEditorText(onDisk.text)
+    const current: EditSession = {
+      editor: null,
+      handle,
+      pageURL: window.location.href,
+      baseText,
+      eol: detectEOL(onDisk.text),
+      dirty: false,
+      overwrite: false,
+      saving: false,
+    }
+    session = current
+    current.editor = createEditor({
+      parent: editorPane.ele,
+      doc: baseText,
+      language: editorLanguage(),
+      dark: isDarkTheme(toTheme(configData.pageTheme)),
+      onChange: onEditorChange,
+      onSave: () => void saveEdit(),
+      onEscape: closeEdit,
+    })
+    editorName.textContent = fileName
+    editorStatus.textContent = ''
+    setDirty(false)
+    editorWrap.show()
+    rawToggleBtn.hide()
+    updateEditButton()
+    document.body.classList.add(className.EDITING)
+    applyPreview()
+    window.addEventListener('beforeunload', onBeforeUnload)
+    current.editor.focus()
+  }
+
+  function editorLanguage(): string | undefined {
+    switch (fileType?.kind) {
+      case 'markdown':
+      case 'text':
+        return 'markdown'
+      case 'code':
+        return fileType.language
+      default:
+        return undefined
+    }
+  }
+
+  // Renders the draft, a moment after the last keystroke
+  const previewDraft = debounce((doc: string) => {
+    if (!session || configData.editorPreview === false) return
+    contentRender(doc)
+    renderSide()
+  }, 300)
+
+  function onEditorChange(doc: string) {
+    if (!session) return
+    setDirty(doc !== session.baseText)
+    previewDraft(doc)
+  }
+
+  function setDirty(dirty: boolean) {
+    if (!session) return
+    session.dirty = dirty
+    editorDirty.toggle(dirty)
+    if (dirty) editorStatus.textContent = ''
+  }
+
+  function applyPreview() {
+    const show = configData.editorPreview !== false
+    document.body.classList.toggle(className.EDITING_NO_PREVIEW, !show)
+    previewBtn.textContent = localize(
+      show ? 'edit_preview_hide' : 'edit_preview_show',
+    )
+    previewBtn.ele.setAttribute('aria-pressed', String(show))
+    if (session) {
+      // Back from the hidden preview, or just opened: show the draft now.
+      previewDraft(session.editor.getDoc())
+      previewDraft.flush()
+    }
+  }
+
+  // Writes the editor's text to the file, unless the file changed on disk
+  // since it was read, which the user then settles from the banner.
+  async function saveEdit() {
+    const current = session
+    if (!current || current.saving) return
+    current.saving = true
+    editorStatus.textContent = localize('edit_saving')
+    try {
+      if (!current.overwrite) {
+        const onDisk = await readFile(current.handle)
+        if (hasChangedOnDisk(current.baseText, onDisk.text)) {
+          editorStatus.textContent = ''
+          showDiskChangeBanner(true)
+          return
+        }
+      }
+      const doc = current.editor.getDoc()
+      const text = applyEOL(doc, current.eol)
+      await writeFile(current.handle, text)
+      current.baseText = doc
+      current.overwrite = false
+      mdRaw = text
+      rawContainer.textContent = text
+      hideBanner()
+      setDirty(false)
+      editorStatus.textContent = localize('edit_saved')
+      previewDraft.flush()
+    } catch (e) {
+      editorStatus.textContent = ''
+      showBanner(
+        `${localize('edit_save_failed')}: ${(e as Error)?.message || e}`,
+        'error',
+      )
+    } finally {
+      current.saving = false
+    }
+  }
+
+  // The file changed on disk while open in the editor: an agent wrote it.
+  function onDiskChange(onDisk: string) {
+    const current = session
+    if (!current || current.saving) return
+    if (!hasChangedOnDisk(current.baseText, onDisk)) return
+    if (current.dirty) {
+      showDiskChangeBanner(false)
+    } else {
+      void reloadFromDisk()
+    }
+  }
+
+  function showDiskChangeBanner(offerOverwrite: boolean) {
+    if (!session || editorBanner.ele.dataset.kind === 'disk') return
+    const actions = [
+      { label: localize('edit_reload_disk'), run: () => void reloadFromDisk() },
+    ]
+    if (offerOverwrite) {
+      actions.push({
+        label: localize('edit_overwrite'),
+        run: () => {
+          if (!session) return
+          session.overwrite = true
+          hideBanner()
+          session.editor.focus()
+          void saveEdit()
+        },
+      })
+    }
+    showBanner(localize('edit_changed_on_disk'), 'warning', actions)
+    editorBanner.ele.dataset.kind = 'disk'
+  }
+
+  async function reloadFromDisk() {
+    const current = session
+    if (!current) return
+    try {
+      const onDisk = await readFile(current.handle)
+      if (session !== current) return
+      const doc = toEditorText(onDisk.text)
+      current.baseText = doc
+      current.eol = detectEOL(onDisk.text)
+      current.overwrite = false
+      mdRaw = onDisk.text
+      rawContainer.textContent = onDisk.text
+      hideBanner()
+      // Also refreshes the preview and the dirty state through onEditorChange
+      current.editor.setDoc(doc)
+      setDirty(false)
+      previewDraft.flush()
+      current.editor.focus()
+    } catch (e) {
+      showEditError(e)
+    }
+  }
+
+  // Back to reading, asking first about unsaved changes
+  function closeEdit() {
+    if (!session) return
+    if (!confirmLeave()) return
+    stopEdit(true)
+  }
+
+  function confirmLeave(): boolean {
+    return !session?.dirty || window.confirm(localize('edit_discard_confirm'))
+  }
+
+  function stopEdit(rerender: boolean) {
+    const current = session
+    if (!current) return
+    previewDraft.cancel()
+    session = null
+    current.editor.destroy()
+    editorPane.ele.replaceChildren()
+    editorWrap.hide()
+    hideBanner()
+    document.body.classList.remove(
+      className.EDITING,
+      className.EDITING_NO_PREVIEW,
+    )
+    window.removeEventListener('beforeunload', onBeforeUnload)
+    rawToggleBtn.toggle(Boolean(viewedFileURL) || !directoryPage)
+    updateEditButton()
+    if (rerender) {
+      contentRender(mdRaw)
+      renderSide()
+    }
+  }
+
+  function onBeforeUnload(e: BeforeUnloadEvent) {
+    if (!session?.dirty) return
+    e.preventDefault()
+    e.returnValue = ''
+  }
+
+  function showEditError(e: unknown) {
+    if (e instanceof PickerCancelledError) {
+      showBanner(localize('edit_cancelled'))
+    } else if (e instanceof FolderMismatchError) {
+      showBanner(
+        format(localize('edit_folder_mismatch'), {
+          path: displayPath(e.rootURL),
+        }),
+        'warning',
+      )
+    } else if (
+      e instanceof DOMException &&
+      (e.name === 'NotAllowedError' || e.name === 'SecurityError')
+    ) {
+      showBanner(localize('edit_permission_denied'), 'error')
+    } else {
+      showBanner(
+        `${localize('viewer_failed')}: ${(e as Error)?.message || e}`,
+        'error',
+      )
+    }
+  }
+
+  function showBanner(
+    message: string,
+    kind: 'info' | 'warning' | 'error' = 'info',
+    actions: Array<{ label: string; run: () => void }> = [],
+  ) {
+    const text = document.createElement('span')
+    text.textContent = message
+    editorBanner.ele.replaceChildren(text)
+    for (const action of actions) {
+      const button = createEditorAction(action.label)
+      button.on('click', action.run)
+      editorBanner.append(button)
+    }
+    editorBanner.classList.toggle(
+      className.EDITOR_BANNER_WARNING,
+      kind === 'warning',
+    )
+    editorBanner.classList.toggle(
+      className.EDITOR_BANNER_ERROR,
+      kind === 'error',
+    )
+    delete editorBanner.ele.dataset.kind
+    editorBanner.show()
+  }
+
+  function hideBanner() {
+    delete editorBanner.ele.dataset.kind
+    editorBanner.hide()
   }
 
   function scrollToHash(scrollY = 0) {
@@ -762,11 +1199,11 @@ function main(data: Data) {
       if (theme === 'auto' || prevTheme === 'auto') {
         const themeScheme = getMediaQueryTheme()
         if (theme !== themeScheme && prevTheme !== themeScheme) {
-          contentRender(mdRaw)
+          contentRender(shownText())
           renderSide()
         }
       } else {
-        contentRender(mdRaw)
+        contentRender(shownText())
         renderSide()
       }
     }
@@ -824,6 +1261,58 @@ function createRawContainer(): HTMLElement {
 
 function isMedia(kind?: FileKind): kind is 'image' | 'video' | 'audio' {
   return kind === 'image' || kind === 'video' || kind === 'audio'
+}
+
+// Text files, which the editor can save; see startEdit.
+function isEditable(kind?: FileKind): boolean {
+  return (
+    kind === 'markdown' ||
+    kind === 'text' ||
+    kind === 'code' ||
+    kind === 'table'
+  )
+}
+
+interface EditSession {
+  editor: Editor
+  handle: FileSystemFileHandle
+  // The page URL when editing began, to come back to after a declined
+  // navigation
+  pageURL: string
+  // The text last read from or written to the file, as the editor holds it
+  baseText: string
+  eol: EOL
+  dirty: boolean
+  // The user chose to overwrite a file that changed on disk
+  overwrite: boolean
+  saving: boolean
+}
+
+// The file's text as the editor holds it: no BOM, LF line breaks
+function toEditorText(text: string): string {
+  return applyEOL(text.replace(/^\uFEFF/, ''), '\n')
+}
+
+function createEditorAction(label: string, primary = false): Ele<HTMLElement> {
+  const button = new Ele<HTMLElement>('button', {
+    className: [
+      className.EDITOR_ACTION,
+      primary ? className.EDITOR_ACTION_PRIMARY : '',
+    ],
+    type: 'button',
+  })
+  button.textContent = label
+  return button
+}
+
+// A folder URL as the folder picker names it
+function displayPath(url: string): string {
+  try {
+    const path = decodeURIComponent(new URL(url).pathname).replace(/\/$/, '')
+    return /^\/[a-z]:/i.test(path) ? path.slice(1).replace(/\//g, '\\') : path
+  } catch {
+    return url
+  }
 }
 
 // A click that opens the link elsewhere, such as in a new tab

@@ -34,6 +34,8 @@ export interface Data {
   folderPaneRatio?: number
   folderRootPath?: string
   folderSortOrder?: FolderSortOrder
+  // The rendered preview beside the editor in edit mode
+  editorPreview?: boolean
 }
 
 export function getDefaultData(mergeData: Data = {}): Data {
@@ -49,6 +51,7 @@ export function getDefaultData(mergeData: Data = {}): Data {
     folderPaneRatio: 0.42,
     folderRootPath: '',
     folderSortOrder: 'name-asc',
+    editorPreview: true,
     language: i18n().locale,
     mdPlugins: [...MD_PLUGINS],
     pageTheme: PAGE_THEMES[0],
