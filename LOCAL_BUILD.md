@@ -79,5 +79,4 @@ numbers, so it gets the day alone, such as `2026.10.12`.
 
 `.github/workflows/build.yml` runs the tests and the build on every push and
 pull request, and publishes every commit on `main` as a release named after
-the commit's day, such as `2026.10.12`, or `2026.10.12-<short hash>` for a second
-release the same day, with the zip attached.
+its version, such as `2026.10.12-4a6cac3`, with the zip attached.

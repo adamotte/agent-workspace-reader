@@ -42,9 +42,8 @@ jobs:
           if-no-files-found: error
 
   release:
-    # Publish every commit on main as a release named after the commit's day
-    # (UTC), with the short commit hash appended when the day already has one.
-    # The zip keeps the full version, day and hash, as in its manifest.
+    # Publish every commit on main as a release named after its version, the
+    # commit's day (UTC) and short hash, as in the manifest and the zip.
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
@@ -64,10 +63,7 @@ jobs:
       - name: Create the release
         run: |
           exists() { gh release view "$1" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; }
-          tag="${VERSION%%-*}"
-          if exists "$tag"; then
-            tag="$VERSION"
-          fi
+          tag="$VERSION"
           if exists "$tag"; then
             echo "Release $tag already exists, nothing to publish."
             exit 0

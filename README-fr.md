@@ -171,7 +171,7 @@ node --test "tests/*.test.mjs"    # tests unitaires
 
 Les tests unitaires importent directement les sources TypeScript, ce qui demande Node.js 22.18 ou plus récent.
 
-Le [workflow Build](.github/workflows/build.yml) lance les tests et le build à chaque push et pull request, et conserve le zip comme artefact du workflow. Chaque commit sur `main` est publié comme une release nommée d'après le jour du commit, par exemple `2026.10.12`, avec le zip en pièce jointe ; une seconde release le même jour reçoit le hash court du commit en suffixe, par exemple `2026.10.12-4a6cac3`.
+Le [workflow Build](.github/workflows/build.yml) lance les tests et le build à chaque push et pull request, et conserve le zip comme artefact du workflow. Chaque commit sur `main` est publié comme une release nommée d'après sa version, par exemple `2026.10.12-4a6cac3`, avec le zip en pièce jointe.
 
 ## 🙏 Remerciements
 
