@@ -33,7 +33,7 @@ jobs:
       - run: pnpm build
 
       - id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(node -p "require('./extension/manifest.json').version_name")" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -42,8 +42,9 @@ jobs:
           if-no-files-found: error
 
   release:
-    # Publish every commit on main as a release named after the day (UTC),
-    # with the short commit hash appended when the day already has one.
+    # Publish every commit on main as a release named after the commit's day
+    # (UTC), with the short commit hash appended when the day already has one.
+    # The zip keeps the full version, day and hash, as in its manifest.
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
@@ -63,18 +64,17 @@ jobs:
       - name: Create the release
         run: |
           exists() { gh release view "$1" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; }
-          tag="$(date -u +%Y.%m.%d)"
+          tag="${VERSION%%-*}"
           if exists "$tag"; then
-            tag="$tag-${GITHUB_SHA::7}"
+            tag="$VERSION"
           fi
           if exists "$tag"; then
             echo "Release $tag already exists, nothing to publish."
             exit 0
           fi
-          mv "dist/agent-workspace-reader-$VERSION.zip" "dist/agent-workspace-reader-$tag.zip"
           gh release create "$tag" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "$tag" \
             --generate-notes \
-            "dist/agent-workspace-reader-$tag.zip"
+            "dist/agent-workspace-reader-$VERSION.zip"

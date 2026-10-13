@@ -70,10 +70,14 @@ pnpm run build
 
 The unpacked extension lands in `extension/`, which "Load unpacked" accepts
 like the unzipped release, and the
-`agent-workspace-reader-<version>.zip` package, named after the version in
-`package.json`, in `dist/`.
+`agent-workspace-reader-<version>.zip` package in `dist/`.
+
+The version is never edited by hand: the build names it after the last
+commit, its day (UTC) and short hash, such as `2026.10.12-4a6cac3`, in the
+manifest's `version_name` and the zip's name. Chrome's `version` only takes
+numbers, so it gets the day alone, such as `2026.10.12`.
 
 `.github/workflows/build.yml` runs the tests and the build on every push and
 pull request, and publishes every commit on `main` as a release named after
-the day, such as `2026.10.12`, or `2026.10.12-<short hash>` for a second
+the commit's day, such as `2026.10.12`, or `2026.10.12-<short hash>` for a second
 release the same day, with the zip attached.

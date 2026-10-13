@@ -7,7 +7,7 @@
 **Lisez dans le navigateur les dossiers où travaillent vos agents IA : rapports, plans, mémoire, skills, journaux d'exécution, CSV et code, avec une arborescence et des liens wiki.**
 
 [![Licence : MIT](https://img.shields.io/badge/licence-MIT-blue?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/github/package-json/v/adamotte/agent-workspace-reader?style=flat-square)](package.json)
+[![Version](https://img.shields.io/github/v/release/adamotte/agent-workspace-reader?style=flat-square)](https://github.com/adamotte/agent-workspace-reader/releases)
 [![Manifest V3](https://img.shields.io/badge/manifest-v3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](src/manifest.json)
 [![Chrome | Edge](https://img.shields.io/badge/Chrome%20%7C%20Edge-extension-0078D7?style=flat-square&logo=microsoftedge&logoColor=white)](#-installation)
 [![Build](https://img.shields.io/github/actions/workflow/status/adamotte/agent-workspace-reader/build.yml?branch=main&style=flat-square&label=build)](https://github.com/adamotte/agent-workspace-reader/actions/workflows/build.yml)
@@ -159,17 +159,19 @@ pnpm install
 pnpm build
 ```
 
-L'extension décompressée se trouve dans `extension/`, à charger avec **Charger l'extension non empaquetée** comme à l'[installation](#-installation), et le zip, nommé d'après la version de `package.json`, dans `dist/`.
+L'extension décompressée se trouve dans `extension/`, à charger avec **Charger l'extension non empaquetée** comme à l'[installation](#-installation), et le zip dans `dist/`.
+
+Il n'y a pas de version à incrémenter : le build la nomme d'après le dernier commit, son jour (UTC) et son hash court, par exemple `2026.10.12-4a6cac3`. Ce nom complet va dans le `version_name` du manifeste et dans le nom du zip ; le champ `version` de Chrome n'accepte que des nombres, il reçoit donc le jour seul, par exemple `2026.10.12`.
 
 ```bash
 pnpm dev                          # construit dans extension/ et reconstruit à chaque modification
-pnpm build                        # manifeste, build de production et zip
+pnpm build                        # build de production et zip
 node --test "tests/*.test.mjs"    # tests unitaires
 ```
 
 Les tests unitaires importent directement les sources TypeScript, ce qui demande Node.js 22.18 ou plus récent.
 
-Le [workflow Build](.github/workflows/build.yml) lance les tests et le build à chaque push et pull request, et conserve le zip comme artefact du workflow. Chaque commit sur `main` est publié comme une release nommée d'après le jour, par exemple `2026.10.12`, avec le zip en pièce jointe ; une seconde release le même jour reçoit le hash court du commit en suffixe, par exemple `2026.10.12-4a6cac3`.
+Le [workflow Build](.github/workflows/build.yml) lance les tests et le build à chaque push et pull request, et conserve le zip comme artefact du workflow. Chaque commit sur `main` est publié comme une release nommée d'après le jour du commit, par exemple `2026.10.12`, avec le zip en pièce jointe ; une seconde release le même jour reçoit le hash court du commit en suffixe, par exemple `2026.10.12-4a6cac3`.
 
 ## 🙏 Remerciements
 

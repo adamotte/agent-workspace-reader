@@ -5,6 +5,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const FriendlyErrors = require('@nuxt/friendly-errors-webpack-plugin')
 const SveltePreprocess = require('svelte-preprocess')
+const { buildVersion } = require('./version')
 
 module.exports = {
   entry: {
@@ -84,6 +85,13 @@ module.exports = {
       patterns: [
         {
           from: resolve(__dirname, '../src/manifest.json'),
+          transform(content) {
+            const { version, versionName } = buildVersion()
+            const manifest = JSON.parse(content.toString())
+            manifest.version = version
+            manifest.version_name = versionName
+            return JSON.stringify(manifest, null, 2)
+          },
         },
         {
           from: resolve(__dirname, '../src/_locales'),

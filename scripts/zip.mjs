@@ -1,14 +1,17 @@
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
 import archiver from 'archiver'
-import { url, log, newVersion } from './utils.mjs'
+import { url, log } from './utils.mjs'
 
 const entryDir = url('../extension/')
 const outputDir = url('../dist/')
-const extName = `agent-workspace-reader-${newVersion}.zip`
 
 try {
-  await fs.access(entryDir)
+  const manifest = JSON.parse(
+    await fs.readFile(url('manifest.json', entryDir), 'utf-8'),
+  )
+  const extName = `agent-workspace-reader-${manifest.version_name}.zip`
+
   await fs.access(outputDir).catch(() => fs.mkdir(outputDir))
 
   const fh = await fs.open(url(extName, outputDir), 'w+')

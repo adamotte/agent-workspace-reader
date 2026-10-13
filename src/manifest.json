@@ -1,7 +1,6 @@
 {
   "name": "__MSG_ext_name__",
-  "version": "2026.10.12",
-  "version_name": "2026.10.12-rooted-folder-tree",
+  "version": "0.0.0",
   "author": "Anthony Damotte",
   "manifest_version": 3,
   "description": "__MSG_ext_desc__",

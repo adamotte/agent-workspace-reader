@@ -7,7 +7,7 @@
 **Read the folders your AI agents write to, right in the browser: reports, plans, memory, skills, run logs, CSV and code, with a folder tree and wiki links.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/github/package-json/v/adamotte/agent-workspace-reader?style=flat-square)](package.json)
+[![Version](https://img.shields.io/github/v/release/adamotte/agent-workspace-reader?style=flat-square)](https://github.com/adamotte/agent-workspace-reader/releases)
 [![Manifest V3](https://img.shields.io/badge/manifest-v3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](src/manifest.json)
 [![Chrome | Edge](https://img.shields.io/badge/Chrome%20%7C%20Edge-extension-0078D7?style=flat-square&logo=microsoftedge&logoColor=white)](#-installation)
 [![Build](https://img.shields.io/github/actions/workflow/status/adamotte/agent-workspace-reader/build.yml?branch=main&style=flat-square&label=build)](https://github.com/adamotte/agent-workspace-reader/actions/workflows/build.yml)
@@ -159,17 +159,19 @@ pnpm install
 pnpm build
 ```
 
-The unpacked extension lands in `extension/`, which you can load with **Load unpacked** as in the [installation](#-installation), and the zip, named after the version in `package.json`, in `dist/`.
+The unpacked extension lands in `extension/`, which you can load with **Load unpacked** as in the [installation](#-installation), and the zip in `dist/`.
+
+There is no version to bump: the build names it after the last commit, its day (UTC) and short hash, such as `2026.10.12-4a6cac3`. That full name goes in the manifest's `version_name` and the zip's name; Chrome's `version` only takes numbers, so it gets the day alone, such as `2026.10.12`.
 
 ```bash
 pnpm dev                          # build into extension/ and rebuild on change
-pnpm build                        # manifest, production build and zip
+pnpm build                        # production build and zip
 node --test "tests/*.test.mjs"    # unit tests
 ```
 
 The unit tests import the TypeScript sources directly, which needs Node.js 22.18 or later.
 
-The [Build workflow](.github/workflows/build.yml) runs the tests and the build on every push and pull request, and keeps the zip as a workflow artifact. Every commit on `main` is published as a release named after the day, such as `2026.10.12`, with the zip attached; a second release the same day gets the short commit hash appended, such as `2026.10.12-4a6cac3`.
+The [Build workflow](.github/workflows/build.yml) runs the tests and the build on every push and pull request, and keeps the zip as a workflow artifact. Every commit on `main` is published as a release named after the commit's day, such as `2026.10.12`, with the zip attached; a second release the same day gets the short commit hash appended, such as `2026.10.12-4a6cac3`.
 
 ## 🙏 Acknowledgements
 
