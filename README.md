@@ -93,6 +93,16 @@ To update, unzip the new release over the same folder and click the extension's 
 
 You can also [build it from source](#%EF%B8%8F-development).
 
+### Desktop shortcut (Windows)
+
+To open a workspace in a window of its own, without tabs or address bar, run `make-shortcut.ps1` from the unzipped folder: it puts a shortcut with the extension's icon on your desktop.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\make-shortcut.ps1 -Workspace C:\Users\me\agents\atlas -Name "Atlas"
+```
+
+It uses Chrome, or Edge when Chrome isn't installed (`-Browser edge` to choose), in your usual profile, where the extension is already installed (`-ProfileName "Profile 1"` for another one). Add `-Isolated -Setup` for a profile of its own, with no other extension: the first run opens its extensions page, where you load the extension again and allow file URLs.
+
 ## 🔧 Configuration
 
 <img src="docs/screenshots/popup.png" alt="Settings popup" width="250" align="right">

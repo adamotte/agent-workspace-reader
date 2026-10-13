@@ -93,6 +93,16 @@ Pour mettre à jour, décompressez la nouvelle release dans le même dossier et 
 
 Vous pouvez aussi la [construire à partir des sources](#%EF%B8%8F-développement).
 
+### Raccourci sur le bureau (Windows)
+
+Pour ouvrir un workspace dans une fenêtre à part, sans onglets ni barre d'adresse, lancez `make-shortcut.ps1` depuis le dossier décompressé : il pose sur le bureau un raccourci à l'icône de l'extension.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\make-shortcut.ps1 -Workspace C:\Users\moi\agents\atlas -Name "Atlas"
+```
+
+Il utilise Chrome, ou Edge si Chrome n'est pas installé (`-Browser edge` pour choisir), dans votre profil habituel, où l'extension est déjà installée (`-ProfileName "Profile 1"` pour un autre). Ajoutez `-Isolated -Setup` pour un profil à part, sans autre extension : le premier lancement ouvre sa page des extensions, où vous chargez à nouveau l'extension et autorisez les URL de fichiers.
+
 ## 🔧 Configuration
 
 <img src="docs/screenshots/popup.png" alt="Fenêtre des réglages" width="250" align="right">

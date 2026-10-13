@@ -27,6 +27,10 @@ try {
 
   archive.pipe(output)
   archive.directory(fileURLToPath(entryDir), false)
+  // The shortcut script, next to the extension's files it takes its icon from
+  archive.file(fileURLToPath(url('make-shortcut.ps1')), {
+    name: 'make-shortcut.ps1',
+  })
   archive.finalize()
 } catch (err) {
   log.red(err)
