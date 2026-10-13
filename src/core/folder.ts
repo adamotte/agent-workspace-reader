@@ -43,11 +43,20 @@ interface FolderBrowserOptions {
 export interface FolderBrowser {
   // Highlights the file now shown, opening the folders that hold it.
   setCurrentURL(url?: string): void
+  // Reads the root and the open folders again, and redraws the tree if
+  // a file was added, removed or changed, keeping the same folders open.
+  refresh(): Promise<void>
 }
 
 // Folders loaded later still highlight the file shown at that time.
 interface TreeState {
   currentURL?: string
+  // The first drawing opens the folders holding the current file; a redraw
+  // opens those that were open, the reader's choice.
+  keepsOpenFolders?: boolean
+  openURLs: Set<string>
+  // Listings already read, by folder URL, so a redraw needn't read them again
+  listings: Map<string, string>
 }
 
 export function isLocalDirectoryPage(
@@ -225,7 +234,14 @@ export function renderFolderBrowser({
   localize = i18n(),
 }: FolderBrowserOptions): FolderBrowser {
   container.replaceChildren()
-  const state: TreeState = { currentURL }
+  const state: TreeState = {
+    currentURL,
+    openURLs: new Set(),
+    listings: new Map(),
+  }
+  let rootHTML: string | undefined
+  let renderTree: (scrollToCurrent?: boolean) => Promise<void> = async () => {}
+  let refreshing = false
   let activeSortOrder = normalizeFolderSortOrder(sortOrder)
 
   const header = document.createElement('div')
@@ -282,22 +298,33 @@ export function renderFolderBrowser({
 
   void (async () => {
     try {
-      const html = initialHTML ?? (await fetchLocalText(rootURL, localize))
+      rootHTML = initialHTML ?? (await fetchLocalText(rootURL, localize))
       let renderVersion = 0
-      const renderTree = async () => {
+      renderTree = async (scrollToCurrent = true) => {
         const version = ++renderVersion
-        const entries = parseDirectoryEntries(html, rootURL, activeSortOrder)
+        if (tree.hasChildNodes()) {
+          // A redraw keeps the folders as the reader left them.
+          state.openURLs = new Set(shownOpenFolders(tree))
+          state.keepsOpenFolders = true
+        }
+        const entries = parseDirectoryEntries(
+          rootHTML,
+          rootURL,
+          activeSortOrder,
+        )
         const nextTree = document.createElement('ul')
         await renderEntries(nextTree, entries, state, activeSortOrder, localize)
         if (version !== renderVersion) return
 
         tree.replaceChildren(...Array.from(nextTree.childNodes))
         status.remove()
-        requestAnimationFrame(() => {
-          tree
-            .querySelector(`.${className.FOLDER_FILE_ACTIVE}`)
-            ?.scrollIntoView({ block: 'nearest' })
-        })
+        if (scrollToCurrent) {
+          requestAnimationFrame(() => {
+            tree
+              .querySelector(`.${className.FOLDER_FILE_ACTIVE}`)
+              ?.scrollIntoView({ block: 'nearest' })
+          })
+        }
         if (!entries.length) {
           status.textContent = localize('folder_empty')
           container.insertBefore(status, tree)
@@ -324,7 +351,41 @@ export function renderFolderBrowser({
       state.currentURL = url
       markCurrentFile(tree, url)
     },
+    async refresh() {
+      if (rootHTML === undefined || refreshing) return
+      refreshing = true
+      try {
+        const openURLs = shownOpenFolders(tree)
+        const [root, ...children] = await Promise.all(
+          [rootURL, ...openURLs].map(url =>
+            fetchLocalText(url, localize).catch(() => undefined),
+          ),
+        )
+        if (root === undefined) return
+
+        let changed = root !== rootHTML
+        // Closed folders are dropped, so opening one reads it afresh.
+        const listings = new Map<string, string>()
+        openURLs.forEach((url, i) => {
+          if (children[i] === undefined) return
+          if (children[i] !== state.listings.get(url)) changed = true
+          listings.set(url, children[i])
+        })
+        rootHTML = root
+        state.listings = listings
+        if (changed) await renderTree(false)
+      } finally {
+        refreshing = false
+      }
+    },
   }
+}
+
+// The open folders, leaving out those inside a closed one, which aren't shown
+function shownOpenFolders(tree: HTMLElement): string[] {
+  return Array.from(tree.querySelectorAll<HTMLDetailsElement>('details[open]'))
+    .filter(details => !details.parentElement.closest('details:not([open])'))
+    .map(details => details.dataset.url)
 }
 
 function markCurrentFile(tree: HTMLElement, url?: string) {
@@ -374,7 +435,10 @@ async function renderEntries(
         loadPromise = (async () => {
           summary.classList.add(className.FOLDER_LOADING)
           try {
-            const html = await fetchLocalText(entry.url, localize)
+            const html =
+              state.listings.get(entry.url) ??
+              (await fetchLocalText(entry.url, localize))
+            state.listings.set(entry.url, html)
             const childEntries = parseDirectoryEntries(
               html,
               entry.url,
@@ -410,7 +474,11 @@ async function renderEntries(
       item.append(details)
       list.append(item)
 
-      if (state.currentURL && isURLWithinRoot(state.currentURL, entry.url)) {
+      if (
+        state.keepsOpenFolders
+          ? state.openURLs.has(entry.url)
+          : state.currentURL && isURLWithinRoot(state.currentURL, entry.url)
+      ) {
         details.open = true
         await loadChildren()
       }

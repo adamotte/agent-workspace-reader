@@ -166,6 +166,10 @@ function main(data: Data) {
   }
 
   let pollingTimer: number = null
+  // The folder tree is read less often than the shown file: it may take
+  // several listings.
+  const FOLDER_REFRESH_INTERVAL = 2000
+  let folderRefreshTime = 0
   // Counts files shown, so that a slow read can't replace a later file
   let showing = 0
   let reloading: boolean = false
@@ -647,6 +651,13 @@ function main(data: Data) {
   function polling() {
     void (async function watch() {
       clearTimeout(pollingTimer)
+      if (
+        folderView &&
+        Date.now() - folderRefreshTime >= FOLDER_REFRESH_INTERVAL
+      ) {
+        folderRefreshTime = Date.now()
+        void folderView.refresh()
+      }
       const url = viewedFileURL
       const res = await readShownFile()
       // Unless another file is shown by now
