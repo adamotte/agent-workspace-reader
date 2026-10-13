@@ -42,8 +42,9 @@ jobs:
           if-no-files-found: error
 
   release:
-    # Publish every commit on main as a release named after its version, the
-    # commit's day (UTC) and short hash, as in the manifest and the zip.
+    # Publish every commit on main as a release named after the commit's day
+    # (UTC), with the short commit hash appended when the day already has one,
+    # as in the manifest's version_name.
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
@@ -63,14 +64,18 @@ jobs:
       - name: Create the release
         run: |
           exists() { gh release view "$1" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; }
-          tag="$VERSION"
+          tag="${VERSION%%-*}"
+          if exists "$tag"; then
+            tag="$VERSION"
+          fi
           if exists "$tag"; then
             echo "Release $tag already exists, nothing to publish."
             exit 0
           fi
+          mv "dist/agent-workspace-reader-$VERSION.zip" "dist/agent-workspace-reader-$tag.zip"
           gh release create "$tag" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "$tag" \
             --generate-notes \
-            "dist/agent-workspace-reader-$VERSION.zip"
+            "dist/agent-workspace-reader-$tag.zip"

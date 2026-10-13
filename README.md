@@ -171,7 +171,7 @@ node --test "tests/*.test.mjs"    # unit tests
 
 The unit tests import the TypeScript sources directly, which needs Node.js 22.18 or later.
 
-The [Build workflow](.github/workflows/build.yml) runs the tests and the build on every push and pull request, and keeps the zip as a workflow artifact. Every commit on `main` is published as a release named after its version, such as `2026.10.12-4a6cac3`, with the zip attached.
+The [Build workflow](.github/workflows/build.yml) runs the tests and the build on every push and pull request, and keeps the zip as a workflow artifact. Every commit on `main` is published as a release named after the commit's day, such as `2026.10.12`, with the zip attached; a second release the same day gets the short commit hash appended, such as `2026.10.12-4a6cac3`.
 
 ## 🙏 Acknowledgements
 
