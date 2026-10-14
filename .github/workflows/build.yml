@@ -72,7 +72,9 @@ jobs:
             echo "Release $tag already exists, nothing to publish."
             exit 0
           fi
-          mv "dist/agent-workspace-reader-$VERSION.zip" "dist/agent-workspace-reader-$tag.zip"
+          if [ "$tag" != "$VERSION" ]; then
+            mv "dist/agent-workspace-reader-$VERSION.zip" "dist/agent-workspace-reader-$tag.zip"
+          fi
           gh release create "$tag" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
