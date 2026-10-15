@@ -406,6 +406,12 @@ function main(data: Data) {
         void storage.set('folderSortOrder', sortOrder)
       },
       onOpenSettings: () => {
+        // A page opened before the extension was reloaded has lost its link
+        // to it: reloading the page gets a working one.
+        if (!chrome.runtime?.id) {
+          location.reload()
+          return
+        }
         chrome.runtime.sendMessage({ action: 'openSettings' })
       },
       localize,
